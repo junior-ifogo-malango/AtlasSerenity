@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --font-fraunces: "Fraunces", serif;
+  --font-sans: "Lato", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-cream: #faf8f4;
+  --color-ink: #1c1f1d;
+  --color-price: #b85c38;
+
+  --color-cedre: #2d4a3e;
+  --color-argile: #b85c38;
+  --color-sable: #ede6d6;
+  --color-ocre: #dda15e;
+}
+
+/* Fraunces est une police variable dont l'axe optique (opsz) change fortement
+   le dessin des lettres selon la taille : sans ce réglage explicite, un reset
+   CSS ou un moteur de rendu qui ne supporte pas l'auto-optical-sizing peut
+   figer un opsz par défaut inadapté, donnant des lettres à l'aspect déformé. */
+.font-fraunces {
+  font-optical-sizing: auto;
+}
