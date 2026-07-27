@@ -1,19 +1,17 @@
 import { useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
+import { Trans, useTranslation } from "react-i18next"
 import { Eye, EyeOff } from "lucide-react"
 import { useAuth } from "../../context/AuthContext"
+import { TYPES_OPERATEUR } from "../../constants/operateur"
 
 const ROLES = [
-  { value: "voyageur", label: "Voyageur" },
-  { value: "operateur", label: "Opérateur" },
-]
-
-const TYPES_OPERATEUR = [
-  { value: "guide", label: "Guide indépendant" },
-  { value: "entreprise", label: "Entreprise" },
+  { value: "voyageur", labelKey: "auth.register.roleVoyageur" },
+  { value: "operateur", labelKey: "auth.register.roleOperateur" },
 ]
 
 export default function Register() {
+  const { t } = useTranslation()
   const { register } = useAuth()
   const [searchParams] = useSearchParams()
   const redirect = searchParams.get("redirect")
@@ -50,7 +48,7 @@ export default function Register() {
       if (err.status === 422 && err.data?.errors) {
         setFieldErrors(err.data.errors)
       } else {
-        setError("Une erreur est survenue. Veuillez réessayer.")
+        setError(t("common.genericError"))
       }
     } finally {
       setIsSubmitting(false)
@@ -62,20 +60,22 @@ export default function Register() {
       <div className="flex min-h-screen items-center justify-center bg-cream px-6">
         <div className="w-full max-w-sm text-center">
           <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink mb-4">
-            Vérifiez votre email
+            {t("auth.register.checkEmailTitle")}
           </h1>
           <div className="rounded-lg border border-cedre/30 bg-cedre/5 p-4">
             <p className="text-base text-ink">
-              Un email de vérification a été envoyé à{" "}
-              <span className="font-medium">{email}</span>. Cliquez sur le lien qu'il contient
-              pour activer votre compte.
+              <Trans
+                i18nKey="auth.register.checkEmailBody"
+                values={{ email }}
+                components={{ strong: <span className="font-medium" /> }}
+              />
             </p>
           </div>
           <Link
             to={loginHref}
             className="mt-4 inline-block text-base font-medium text-cedre hover:underline"
           >
-            Retour à la connexion
+            {t("auth.register.backToLogin")}
           </Link>
         </div>
       </div>
@@ -86,7 +86,7 @@ export default function Register() {
     <div className="flex min-h-screen items-center justify-center bg-cream px-6">
       <div className="w-full max-w-md">
         <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink text-center mb-8">
-          Inscription
+          {t("auth.register.title")}
         </h1>
 
         <form
@@ -96,7 +96,7 @@ export default function Register() {
         >
           <div>
             <label htmlFor="name" className="block text-base font-medium text-ink mb-1">
-              Nom
+              {t("auth.register.name")}
             </label>
             <input
               id="name"
@@ -106,7 +106,7 @@ export default function Register() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full rounded-lg border-2 border-ink/15 bg-white px-4 py-2 text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
-              placeholder="Votre nom"
+              placeholder={t("auth.register.namePlaceholder")}
             />
             {fieldErrors.name && (
               <p className="mt-1 text-base text-price" role="alert">
@@ -117,7 +117,7 @@ export default function Register() {
 
           <div>
             <label htmlFor="email" className="block text-base font-medium text-ink mb-1">
-              Email
+              {t("common.email")}
             </label>
             <input
               id="email"
@@ -127,7 +127,7 @@ export default function Register() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border-2 border-ink/15 bg-white px-4 py-2 text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
-              placeholder="vous@exemple.com"
+              placeholder={t("common.emailPlaceholder")}
             />
             {fieldErrors.email && (
               <p className="mt-1 text-base text-price" role="alert">
@@ -138,7 +138,7 @@ export default function Register() {
 
           <div>
             <label htmlFor="password" className="block text-base font-medium text-ink mb-1">
-              Mot de passe
+              {t("common.password")}
             </label>
             <div className="relative">
               <input
@@ -149,12 +149,12 @@ export default function Register() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg border-2 border-ink/15 bg-white px-4 py-2 pr-11 text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
-                placeholder="8 caractères minimum"
+                placeholder={t("auth.register.passwordPlaceholder")}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((show) => !show)}
-                aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                aria-label={showPassword ? t("common.hidePassword") : t("common.showPassword")}
                 className="absolute inset-y-0 right-0 flex items-center px-3 text-ink/50 hover:text-ink"
               >
                 {showPassword ? (
@@ -173,7 +173,7 @@ export default function Register() {
 
           <div>
             <span className="block text-base font-medium text-ink mb-2">
-              Je suis un(e)
+              {t("auth.register.iAm")}
             </span>
             <div className="grid grid-cols-2 gap-2">
               {ROLES.map((option) => (
@@ -188,7 +188,7 @@ export default function Register() {
                       : "border-ink/15 bg-white text-ink hover:border-cedre/50"
                   }`}
                 >
-                  {option.label}
+                  {t(option.labelKey)}
                 </button>
               ))}
             </div>
@@ -202,7 +202,7 @@ export default function Register() {
           {role === "operateur" && (
             <div>
               <label htmlFor="telephone" className="block text-base font-medium text-ink mb-1">
-                Téléphone
+                {t("auth.register.phone")}
               </label>
               <input
                 id="telephone"
@@ -212,7 +212,7 @@ export default function Register() {
                 value={telephone}
                 onChange={(e) => setTelephone(e.target.value)}
                 className="w-full rounded-lg border-2 border-ink/15 bg-white px-4 py-2 text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
-                placeholder="+212 6XX XXXXXX"
+                placeholder={t("auth.register.phonePlaceholder")}
               />
               {fieldErrors.telephone && (
                 <p className="mt-1 text-base text-price" role="alert">
@@ -225,7 +225,7 @@ export default function Register() {
           {role === "operateur" && (
             <div>
               <span className="block text-base font-medium text-ink mb-2">
-                Type d'activité
+                {t("auth.register.activityType")}
               </span>
               <div className="grid grid-cols-2 gap-2">
                 {TYPES_OPERATEUR.map((option) => (
@@ -240,7 +240,7 @@ export default function Register() {
                         : "border-ink/15 bg-white text-ink hover:border-cedre/50"
                     }`}
                   >
-                    {option.label}
+                    {t(option.labelKey)}
                   </button>
                 ))}
               </div>
@@ -263,13 +263,13 @@ export default function Register() {
             disabled={isSubmitting}
             className="w-full rounded-full bg-cedre px-8 py-3 text-base font-medium text-cream shadow-md transition-colors hover:bg-cedre/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSubmitting ? "Inscription..." : "Créer mon compte"}
+            {isSubmitting ? t("auth.register.submitting") : t("auth.register.submit")}
           </button>
 
           <p className="text-center text-base text-ink/70">
-            Déjà un compte ?{" "}
+            {t("auth.register.alreadyHaveAccount")}{" "}
             <Link to={loginHref} className="font-medium text-cedre hover:underline">
-              Se connecter
+              {t("auth.login.submit")}
             </Link>
           </p>
         </form>

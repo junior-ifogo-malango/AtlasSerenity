@@ -1,10 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { MapPin } from 'lucide-react'
 import apiFetch from '../../services/api'
 
 export default function RechercheBar({ compact = false }) {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [villes, setVilles] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -120,16 +122,23 @@ export default function RechercheBar({ compact = false }) {
               setShowSuggestions(true)
             }}
             onFocus={() => setShowSuggestions(true)}
-            placeholder="Rechercher une activité, une région..."
+            placeholder={t('search.placeholder')}
             className="min-w-0 flex-1 bg-transparent text-base text-ink placeholder:text-ink/60 focus:outline-none"
           />
           <button
             type="submit"
             className={`shrink-0 rounded-full bg-price font-medium text-cream shadow-sm transition-colors hover:bg-price/90 ${
-              compact ? 'px-4 py-2 text-sm' : 'px-6 py-2.5 text-base'
+              compact ? 'px-4 py-2 text-sm' : 'px-4 py-2 text-sm sm:px-6 sm:py-2.5 sm:text-base'
             }`}
           >
-            {compact ? 'Rechercher' : 'Trouver une activité'}
+            {compact ? (
+              t('search.submitCompact')
+            ) : (
+              <>
+                <span className="sm:hidden">{t('search.submitCompact')}</span>
+                <span className="hidden sm:inline">{t('search.submit')}</span>
+              </>
+            )}
           </button>
         </div>
 

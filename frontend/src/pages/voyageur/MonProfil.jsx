@@ -1,28 +1,19 @@
 import { useEffect, useState } from "react"
 import { Link, Navigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import Header from "../../components/layout/Header"
 import Tabs from "../../components/ui/Tabs"
 import ToggleSwitch from "../../components/ui/ToggleSwitch"
 import { useAuth } from "../../context/AuthContext"
 import apiFetch from "../../services/api"
+import { STATUT_COMPTE_CLASSNAMES, STATUTS_COMPTE_LABEL_KEYS } from "../../constants/operateur"
+import { getDateLocale } from "../../utils/format"
 
 const ROLES = {
-  voyageur: "Voyageur",
-  operateur: "Opérateur",
-  admin: "Admin",
+  voyageur: "auth.register.roleVoyageur",
+  operateur: "auth.register.roleOperateur",
+  admin: "admin.validation.roleAdmin",
 }
-
-const STATUTS_COMPTE = {
-  en_attente: { label: "Compte en attente de validation", className: "border border-ocre/30 bg-ocre/15 text-ink" },
-  valide: { label: "Compte validé", className: "bg-cedre/10 text-cedre" },
-  refuse: { label: "Compte refusé", className: "bg-argile/10 text-argile" },
-}
-
-const TABS = [
-  { id: "informations", label: "Informations" },
-  { id: "securite", label: "Sécurité" },
-  { id: "notifications", label: "Notifications" },
-]
 
 function initiales(name) {
   return (name ?? "")
@@ -33,35 +24,41 @@ function initiales(name) {
     .join("")
 }
 
-function formatDepuis(dateString) {
+function formatDepuis(dateString, lang) {
   if (!dateString) return "—"
-  return new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(
+  return new Intl.DateTimeFormat(getDateLocale(lang), { month: "long", year: "numeric" }).format(
     new Date(dateString)
   )
 }
 
 function IdentiteCard({ user, operateurStats, voyageurStats }) {
-  const statutInfo = STATUTS_COMPTE[user.statut_compte] ?? {
-    label: user.statut_compte,
-    className: "bg-ink/10 text-ink",
-  }
+  const { t, i18n } = useTranslation()
+  const statutInfo = STATUTS_COMPTE_LABEL_KEYS[user.statut_compte]
+    ? {
+        label: t(STATUTS_COMPTE_LABEL_KEYS[user.statut_compte]),
+        className: STATUT_COMPTE_CLASSNAMES[user.statut_compte],
+      }
+    : {
+        label: user.statut_compte,
+        className: "bg-ink/10 text-ink",
+      }
 
   const stats = [
-    { label: "Rôle", value: ROLES[user.role] ?? user.role },
-    { label: "Membre depuis", value: formatDepuis(user.created_at) },
+    { label: t("profile.roleLabel"), value: ROLES[user.role] ? t(ROLES[user.role]) : user.role },
+    { label: t("profile.memberSinceLabel"), value: formatDepuis(user.created_at, i18n.language) },
   ]
 
   if (user.role === "operateur") {
     stats.push(
-      { label: "Activités publiées", value: operateurStats.activitesPubliees ?? "—" },
-      { label: "Note moyenne", value: operateurStats.noteMoyenne ?? "—" }
+      { label: t("profile.activitiesPublishedLabel"), value: operateurStats.activitesPubliees ?? "—" },
+      { label: t("profile.averageRatingLabel"), value: operateurStats.noteMoyenne ?? "—" }
     )
   }
 
   if (user.role === "voyageur") {
     stats.push(
-      { label: "Réservations effectuées", value: voyageurStats.reservations ?? "—" },
-      { label: "Favoris", value: voyageurStats.favoris ?? "—" }
+      { label: t("profile.reservationsMadeLabel"), value: voyageurStats.reservations ?? "—" },
+      { label: t("nav.favorites"), value: voyageurStats.favoris ?? "—" }
     )
   }
 
@@ -98,6 +95,7 @@ function IdentiteCard({ user, operateurStats, voyageurStats }) {
 }
 
 function InformationsPanel({ user, updateUser }) {
+  const { t } = useTranslation()
   const [name, setName] = useState(user.name ?? "")
   const [telephone, setTelephone] = useState(user.telephone ?? "")
   const [email, setEmail] = useState(user.email ?? "")
@@ -124,7 +122,7 @@ function InformationsPanel({ user, updateUser }) {
       if (err.status === 422 && err.data?.errors) {
         setFieldErrors(err.data.errors)
       } else {
-        setError("Une erreur est survenue. Veuillez réessayer.")
+        setError(t("common.genericError"))
       }
     } finally {
       setIsSubmitting(false)
@@ -136,7 +134,7 @@ function InformationsPanel({ user, updateUser }) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="name" className="mb-1 block text-sm font-medium text-ink">
-            Nom
+            {t("auth.register.name")}
           </label>
           <input
             id="name"
@@ -156,7 +154,7 @@ function InformationsPanel({ user, updateUser }) {
 
         <div>
           <label htmlFor="telephone" className="mb-1 block text-sm font-medium text-ink">
-            Téléphone
+            {t("auth.register.phone")}
           </label>
           <input
             id="telephone"
@@ -177,7 +175,7 @@ function InformationsPanel({ user, updateUser }) {
 
       <div>
         <label htmlFor="email" className="mb-1 block text-sm font-medium text-ink">
-          Email
+          {t("common.email")}
         </label>
         <input
           id="email"
@@ -203,7 +201,7 @@ function InformationsPanel({ user, updateUser }) {
 
       {success && (
         <p className="text-sm text-cedre" role="status">
-          Profil mis à jour avec succès.
+          {t("profile.updateSuccess")}
         </p>
       )}
 
@@ -212,13 +210,14 @@ function InformationsPanel({ user, updateUser }) {
         disabled={isSubmitting}
         className="rounded-full bg-cedre px-8 py-3 text-base font-medium text-cream shadow-md transition-colors hover:bg-cedre/90 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isSubmitting ? "Enregistrement..." : "Enregistrer les modifications"}
+        {isSubmitting ? t("profile.saving") : t("profile.saveChanges")}
       </button>
     </form>
   )
 }
 
 function SecuritePanel({ user }) {
+  const { t } = useTranslation()
   const [currentPassword, setCurrentPassword] = useState("")
   const [password, setPassword] = useState("")
   const [passwordConfirmation, setPasswordConfirmation] = useState("")
@@ -251,7 +250,7 @@ function SecuritePanel({ user }) {
       if (err.status === 422 && err.data?.errors) {
         setFieldErrors(err.data.errors)
       } else {
-        setError("Une erreur est survenue. Veuillez réessayer.")
+        setError(t("common.genericError"))
       }
     } finally {
       setIsSubmitting(false)
@@ -265,7 +264,7 @@ function SecuritePanel({ user }) {
           htmlFor="current_password"
           className="mb-1 block text-sm font-medium text-ink"
         >
-          Mot de passe actuel
+          {t("profile.currentPassword")}
         </label>
         <input
           id="current_password"
@@ -285,7 +284,7 @@ function SecuritePanel({ user }) {
 
       <div>
         <label htmlFor="new_password" className="mb-1 block text-sm font-medium text-ink">
-          Nouveau mot de passe
+          {t("auth.resetPassword.newPassword")}
         </label>
         <input
           id="new_password"
@@ -308,7 +307,7 @@ function SecuritePanel({ user }) {
           htmlFor="password_confirmation"
           className="mb-1 block text-sm font-medium text-ink"
         >
-          Confirmation
+          {t("profile.confirmation")}
         </label>
         <input
           id="password_confirmation"
@@ -329,7 +328,7 @@ function SecuritePanel({ user }) {
 
       {success && (
         <p className="text-sm text-cedre" role="status">
-          Mot de passe mis à jour avec succès.
+          {t("profile.passwordUpdateSuccess")}
         </p>
       )}
 
@@ -338,13 +337,14 @@ function SecuritePanel({ user }) {
         disabled={isSubmitting}
         className="rounded-full bg-cedre px-8 py-3 text-base font-medium text-cream shadow-md transition-colors hover:bg-cedre/90 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isSubmitting ? "Mise à jour..." : "Mettre à jour le mot de passe"}
+        {isSubmitting ? t("profile.updating") : t("profile.updatePassword")}
       </button>
     </form>
   )
 }
 
 function NotificationsPanel({ user, updateUser }) {
+  const { t } = useTranslation()
   const [prefs, setPrefs] = useState({
     notif_reservations: user.notif_reservations ?? true,
     notif_messages: user.notif_messages ?? true,
@@ -367,20 +367,20 @@ function NotificationsPanel({ user, updateUser }) {
   return (
     <div className="divide-y divide-ink/5">
       <ToggleSwitch
-        label="Nouvelles réservations"
-        description="Recevoir un email à chaque nouvelle réservation."
+        label={t("profile.notifReservationsLabel")}
+        description={t("profile.notifReservationsDescription")}
         checked={prefs.notif_reservations}
         onChange={(value) => handleToggle("notif_reservations", value)}
       />
       <ToggleSwitch
-        label="Messages voyageurs"
-        description="Recevoir un email pour chaque nouveau message."
+        label={t("profile.notifMessagesLabel")}
+        description={t("profile.notifMessagesDescription")}
         checked={prefs.notif_messages}
         onChange={(value) => handleToggle("notif_messages", value)}
       />
       <ToggleSwitch
-        label="Newsletter"
-        description="Actualités et offres d'AtlasSerenity."
+        label={t("profile.notifNewsletterLabel")}
+        description={t("profile.notifNewsletterDescription")}
         checked={prefs.notif_newsletter}
         onChange={(value) => handleToggle("notif_newsletter", value)}
       />
@@ -389,6 +389,7 @@ function NotificationsPanel({ user, updateUser }) {
 }
 
 export default function MonProfil() {
+  const { t } = useTranslation()
   const { user, updateUser } = useAuth()
   const [activeTab, setActiveTab] = useState("informations")
   const [operateurStats, setOperateurStats] = useState({})
@@ -464,13 +465,19 @@ export default function MonProfil() {
     return <Navigate to="/login" replace />
   }
 
+  const TABS = [
+    { id: "informations", label: t("profile.tabInformations") },
+    { id: "securite", label: t("profile.tabSecurity") },
+    { id: "notifications", label: t("profile.tabNotifications") },
+  ]
+
   return (
     <div className="min-h-screen bg-cream">
       <Header />
 
       <div className="mx-auto max-w-[1200px] px-6 py-10 md:px-8 md:py-12">
         <h1 className="mb-8 font-fraunces text-3xl font-semibold leading-snug text-ink">
-          Mon profil
+          {t("profile.title")}
         </h1>
 
         <div className="flex flex-col gap-6 md:flex-row md:items-start">
@@ -493,7 +500,7 @@ export default function MonProfil() {
 
         <p className="mt-8 text-center text-sm text-ink/70">
           <Link to="/mot-de-passe-oublie" className="font-medium text-cedre hover:underline">
-            Mot de passe oublié ?
+            {t("auth.login.forgotPassword")}
           </Link>
         </p>
       </div>

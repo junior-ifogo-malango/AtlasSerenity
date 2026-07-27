@@ -1,19 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Heart } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import apiFetch from "../../services/api";
-
-function formatPrixMAD(prix) {
-  return new Intl.NumberFormat("fr-MA", {
-    style: "currency",
-    currency: "MAD",
-    maximumFractionDigits: 0,
-  }).format(prix);
-}
+import { formatPrixMAD } from "../../utils/format";
 
 function BadgeEco({ compact = false }) {
+  const { t } = useTranslation();
   return (
     <span
       className={`absolute left-2 top-2 flex items-center gap-1 rounded-full bg-cedre font-medium text-cream shadow-sm ${
@@ -23,7 +18,7 @@ function BadgeEco({ compact = false }) {
       <svg className="h-3 w-3 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 2C7 2 3 6 3 11c0 5.5 4.5 9.5 8.3 10.9.4.15.9.15 1.3 0C16.5 20.5 21 16.5 21 11c0-5-4-9-9-9zm-.9 14.6l-3.2-3.2 1.06-1.06 2.14 2.14 4.7-4.7 1.06 1.06-5.76 5.76z" />
       </svg>
-      Éco
+      {t("activityCard.eco")}
     </span>
   );
 }
@@ -45,6 +40,7 @@ export default function ActiviteCard({
   variant = "grille",
   onToggleFavori,
 }) {
+  const { t, i18n } = useTranslation();
   const { id, titre, region, prix_mad, note_moyenne, photo, badge_eco } = activite;
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -77,7 +73,7 @@ export default function ActiviteCard({
         });
         setIsFavori(true);
         onToggleFavori?.(id, true);
-        showToast("Ajoutée à Favoris");
+        showToast(t("activityCard.addedToFavorites"));
       }
     } catch {
       // Échec silencieux : le cœur reste dans son état précédent.
@@ -121,7 +117,7 @@ export default function ActiviteCard({
       type="button"
       onClick={handleHeartClick}
       disabled={isTogglingFavori}
-      aria-label={isFavori ? "Retirer des favoris" : "Ajouter aux favoris"}
+      aria-label={isFavori ? t("activityCard.removeFromFavorites") : t("activityCard.addToFavorites")}
       aria-pressed={isFavori}
       className={`${positionClassName} flex h-9 w-9 items-center justify-center rounded-full bg-white/70 shadow-sm backdrop-blur-sm transition-colors hover:bg-white disabled:cursor-not-allowed`}
     >
@@ -146,14 +142,14 @@ export default function ActiviteCard({
           event.stopPropagation();
         }}
       >
-        <p className="font-medium text-ink">Voulez-vous retirer cette activité de vos favoris ?</p>
+        <p className="font-medium text-ink">{t("activityCard.confirmRemoveFavorite")}</p>
         <div className="mt-5 flex justify-end gap-3">
           <button
             type="button"
             onClick={handleAnnulerRetrait}
             className="rounded-full px-4 py-2 text-base font-medium text-ink/70 transition-colors hover:bg-ink/5"
           >
-            Annuler
+            {t("activityCard.cancel")}
           </button>
           <button
             type="button"
@@ -161,7 +157,7 @@ export default function ActiviteCard({
             disabled={isTogglingFavori}
             className="rounded-full bg-red-600 px-4 py-2 text-base font-medium text-cream shadow-sm transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Supprimer
+            {t("activityCard.delete")}
           </button>
         </div>
       </div>
@@ -196,7 +192,7 @@ export default function ActiviteCard({
           <h3 className="line-clamp-2 text-base font-semibold text-ink">{titre}</h3>
           <p className="mt-1 truncate text-sm text-ink/70">{region}</p>
           <div className="mt-2 flex items-center gap-3">
-            <span className="text-sm font-semibold text-price">{formatPrixMAD(prix_mad)}</span>
+            <span className="text-sm font-semibold text-price">{formatPrixMAD(prix_mad, i18n.language)}</span>
             {typeof note_moyenne === "number" && <Note valeur={note_moyenne} />}
           </div>
         </div>
@@ -242,7 +238,7 @@ export default function ActiviteCard({
 
         <div className="flex items-center justify-between pt-1">
           <span className="text-sm font-semibold text-price">
-            {formatPrixMAD(prix_mad)}
+            {formatPrixMAD(prix_mad, i18n.language)}
           </span>
 
           {typeof note_moyenne === "number" && <Note valeur={note_moyenne} />}

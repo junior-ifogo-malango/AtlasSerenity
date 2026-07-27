@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { Navigate, useParams } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import Header from "../../components/layout/Header"
 import { useAuth } from "../../context/AuthContext"
 import apiFetch, { API_BASE_URL } from "../../services/api"
@@ -7,6 +8,7 @@ import apiFetch, { API_BASE_URL } from "../../services/api"
 const STORAGE_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, "")
 
 export default function GererPhotos() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const { user } = useAuth()
   const fileInputRef = useRef(null)
@@ -64,7 +66,7 @@ export default function GererPhotos() {
       <div className="min-h-screen bg-cream">
         <Header />
         <p className="mx-auto max-w-4xl px-6 py-12 text-ink/70">
-          Cette page est réservée aux opérateurs.
+          {t("operateur.verification.operatorOnly")}
         </p>
       </div>
     )
@@ -76,7 +78,7 @@ export default function GererPhotos() {
       await apiFetch(`/photos-activite/${photoId}`, { method: "DELETE" })
       setPhotos((current) => current.filter((photo) => photo.id !== photoId))
     } catch {
-      setUploadError("Impossible de supprimer cette photo. Veuillez réessayer.")
+      setUploadError(t("operateur.photos.deleteError"))
     } finally {
       setDeletingId(null)
     }
@@ -110,7 +112,7 @@ export default function GererPhotos() {
 
       setUploadError(
         (clePhoto && erreurs[clePhoto]?.[0]) ??
-          "Une erreur est survenue lors de l'envoi des photos. Veuillez réessayer."
+          t("operateur.photos.uploadError")
       )
     } finally {
       setIsUploading(false)
@@ -123,23 +125,23 @@ export default function GererPhotos() {
 
       <div className="mx-auto max-w-3xl px-6 py-12">
         <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink mb-1">
-          Gérer les photos
+          {t("operateur.photos.title")}
         </h1>
         {activite && <p className="text-ink/70 mb-8">{activite.titre}</p>}
 
         {error && (
           <p className="text-price">
-            Impossible de charger les photos pour le moment. Veuillez réessayer plus tard.
+            {t("operateur.photos.loadError")}
           </p>
         )}
 
-        {!error && isLoading && <p className="text-ink/70">Chargement...</p>}
+        {!error && isLoading && <p className="text-ink/70">{t("common.loading")}</p>}
 
         {!error && !isLoading && (
           <>
             <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
               {photos.length === 0 && (
-                <p className="col-span-full text-ink/70">Aucune photo pour cette activité.</p>
+                <p className="col-span-full text-ink/70">{t("operateur.photos.empty")}</p>
               )}
 
               {photos.map((photo) => (
@@ -155,17 +157,15 @@ export default function GererPhotos() {
                     disabled={deletingId === photo.id}
                     className="absolute right-1 top-1 rounded-full bg-ink/70 px-2 py-1 text-sm font-medium text-cream shadow-sm transition-colors hover:bg-price disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {deletingId === photo.id ? "..." : "Supprimer"}
+                    {deletingId === photo.id ? "..." : t("activityCard.delete")}
                   </button>
                 </div>
               ))}
             </div>
 
-            <h2 className="text-lg font-semibold text-ink mb-3">Ajouter des photos</h2>
+            <h2 className="text-lg font-semibold text-ink mb-3">{t("operateur.photos.addPhotosTitle")}</h2>
             <p className="mb-3 text-base text-ink/60">
-              Sélectionnez au moins 5 photos (JPEG, PNG, WebP, GIF ou BMP — le HEIC des
-              iPhone n'est pas pris en charge, convertissez-le avant l'envoi ; 5 Mo max
-              par photo).
+              {t("operateur.photos.requirements")}
             </p>
 
             <form
@@ -191,7 +191,7 @@ export default function GererPhotos() {
                 disabled={isUploading}
                 className="rounded-full bg-cedre px-8 py-3 text-base font-medium text-cream shadow-md transition-colors hover:bg-cedre/90 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isUploading ? "Envoi..." : "Envoyer les photos"}
+                {isUploading ? t("common.sending") : t("operateur.photos.submit")}
               </button>
             </form>
           </>

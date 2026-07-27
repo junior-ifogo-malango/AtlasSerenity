@@ -1,28 +1,34 @@
 import { useEffect, useState } from "react"
 import { Link, Navigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import Header from "../../components/layout/Header"
 import { useAuth } from "../../context/AuthContext"
 import apiFetch from "../../services/api"
+import { formatPrixMAD } from "../../utils/format"
 
-const STATUTS = {
-  publie: { label: "Publiée", className: "bg-cedre/10 text-cedre" },
-  en_attente: { label: "En attente", className: "bg-amber-100 text-amber-800" },
-  refuse: { label: "Refusée", className: "bg-price/10 text-price" },
+const STATUT_CLASSNAMES = {
+  publie: "bg-cedre/10 text-cedre",
+  en_attente: "bg-amber-100 text-amber-800",
+  refuse: "bg-price/10 text-price",
 }
 
-function formatPrixMAD(prix) {
-  return new Intl.NumberFormat("fr-MA", {
-    style: "currency",
-    currency: "MAD",
-    maximumFractionDigits: 0,
-  }).format(prix)
+const STATUT_LABEL_KEYS = {
+  publie: "operateur.dashboard.statutPublished",
+  en_attente: "operateur.dashboard.statutPending",
+  refuse: "operateur.dashboard.statutRejected",
 }
 
 function ActiviteRow({ activite }) {
-  const statutInfo = STATUTS[activite.statut] ?? {
-    label: activite.statut,
-    className: "bg-ink/10 text-ink",
-  }
+  const { t, i18n } = useTranslation()
+  const statutInfo = STATUT_LABEL_KEYS[activite.statut]
+    ? {
+        label: t(STATUT_LABEL_KEYS[activite.statut]),
+        className: STATUT_CLASSNAMES[activite.statut],
+      }
+    : {
+        label: activite.statut,
+        className: "bg-ink/10 text-ink",
+      }
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-ink/10 bg-cream p-5 shadow-sm">
@@ -36,7 +42,7 @@ function ActiviteRow({ activite }) {
           </span>
         </div>
         <p className="mt-1 text-base text-ink/70">
-          {activite.region} · {formatPrixMAD(activite.prix_mad)}
+          {activite.region} · {formatPrixMAD(activite.prix_mad, i18n.language)}
         </p>
       </div>
 
@@ -45,25 +51,25 @@ function ActiviteRow({ activite }) {
           to={`/operateur/activites/${activite.id}/modifier`}
           className="rounded-full border border-cedre px-4 py-2 text-center font-medium text-cedre transition-colors hover:bg-cedre hover:text-cream sm:rounded-none sm:border-0 sm:px-0 sm:py-0 sm:hover:bg-transparent sm:hover:text-cedre sm:hover:underline"
         >
-          Modifier
+          {t("operateur.dashboard.edit")}
         </Link>
         <Link
           to={`/operateur/activites/${activite.id}/disponibilites`}
           className="rounded-full border border-cedre px-4 py-2 text-center font-medium text-cedre transition-colors hover:bg-cedre hover:text-cream"
         >
-          Gérer les disponibilités
+          {t("operateur.availability.title")}
         </Link>
         <Link
           to={`/operateur/activites/${activite.id}/photos`}
           className="rounded-full border border-cedre px-4 py-2 text-center font-medium text-cedre transition-colors hover:bg-cedre hover:text-cream"
         >
-          Gérer les photos
+          {t("operateur.photos.title")}
         </Link>
         <Link
           to={`/operateur/activites/${activite.id}/questionnaire-eco`}
           className="rounded-full border border-cedre px-4 py-2 text-center font-medium text-cedre transition-colors hover:bg-cedre hover:text-cream"
         >
-          Questionnaire éco
+          {t("admin.validation.ecoQuestionnaire")}
         </Link>
       </div>
     </div>
@@ -80,6 +86,7 @@ function ActiviteRowSkeleton() {
 }
 
 export default function DashboardOperateur() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [activites, setActivites] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -125,7 +132,7 @@ export default function DashboardOperateur() {
       <div className="min-h-screen bg-cream">
         <Header />
         <p className="mx-auto max-w-4xl px-6 py-12 text-ink/70">
-          Cette page est réservée aux opérateurs.
+          {t("operateur.verification.operatorOnly")}
         </p>
       </div>
     )
@@ -138,19 +145,19 @@ export default function DashboardOperateur() {
       <section className="mx-auto max-w-4xl px-6 py-12">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="font-fraunces text-2xl font-semibold text-ink">
-            Mes activités
+            {t("operateur.dashboard.title")}
           </h1>
           <Link
             to="/operateur/activites/nouvelle"
             className="rounded-full bg-cedre px-6 py-3 text-base font-medium text-cream shadow-md transition-colors hover:bg-cedre/90"
           >
-            Créer une activité
+            {t("operateur.createActivity.title")}
           </Link>
         </div>
 
         {error && (
           <p className="text-price">
-            Impossible de charger vos activités pour le moment. Veuillez réessayer plus tard.
+            {t("operateur.dashboard.loadError")}
           </p>
         )}
 
@@ -163,7 +170,7 @@ export default function DashboardOperateur() {
         )}
 
         {!error && !isLoading && activites.length === 0 && (
-          <p className="text-ink/70">Vous n'avez pas encore créé d'activité.</p>
+          <p className="text-ink/70">{t("operateur.dashboard.empty")}</p>
         )}
 
         {!error && !isLoading && activites.length > 0 && (

@@ -1,5 +1,7 @@
 // Centralise l'URL de base du backend et les appels fetch authentifiés
 
+import i18n from "../i18n";
+
 export const API_BASE_URL = "http://127.0.0.1:8000/api";
 
 /**
@@ -35,7 +37,7 @@ export async function apiFetch(endpoint, options = {}) {
     } catch {
       errorData = { message: response.statusText };
     }
-    const error = new Error(errorData.message || "Erreur lors de la requête API");
+    const error = new Error(errorData.message || i18n.t("common.genericError"));
     error.status = response.status;
     error.data = errorData;
     throw error;

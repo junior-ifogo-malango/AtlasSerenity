@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react"
 import { Navigate, useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import Header from "../../components/layout/Header"
 import { useAuth } from "../../context/AuthContext"
 import apiFetch from "../../services/api"
 import useAutoGrowTextarea from "../../hooks/useAutoGrowTextarea"
 
-const DUREE_UNITES = [
-  { value: "minutes", label: "Minutes" },
-  { value: "heures", label: "Heures" },
-  { value: "jours", label: "Jours" },
-]
-
 export default function CreerActivite() {
+  const { t } = useTranslation()
   const { user } = useAuth()
+
+  const DUREE_UNITES = [
+    { value: "minutes", label: t("filters.minutes") },
+    { value: "heures", label: t("filters.hours") },
+    { value: "jours", label: t("filters.days") },
+  ]
   const navigate = useNavigate()
 
   const [categories, setCategories] = useState([])
@@ -45,7 +47,7 @@ export default function CreerActivite() {
         }
       } catch {
         if (!cancelled) {
-          setCategoriesError("Impossible de charger les catégories.")
+          setCategoriesError(t("operateur.createActivity.loadCategoriesError"))
         }
       }
     }
@@ -55,7 +57,7 @@ export default function CreerActivite() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [t])
 
   if (!user) {
     return <Navigate to="/login" replace />
@@ -66,7 +68,7 @@ export default function CreerActivite() {
       <div className="min-h-screen bg-cream">
         <Header />
         <p className="mx-auto max-w-4xl px-6 py-12 text-ink/70">
-          Cette page est réservée aux opérateurs.
+          {t("operateur.verification.operatorOnly")}
         </p>
       </div>
     )
@@ -97,7 +99,7 @@ export default function CreerActivite() {
       if (err.status === 422 && err.data?.errors) {
         setFieldErrors(err.data.errors)
       } else {
-        setError("Une erreur est survenue. Veuillez réessayer.")
+        setError(t("common.genericError"))
       }
     } finally {
       setIsSubmitting(false)
@@ -110,7 +112,7 @@ export default function CreerActivite() {
 
       <div className="mx-auto max-w-2xl px-6 py-12">
         <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink mb-8">
-          Créer une activité
+          {t("operateur.createActivity.title")}
         </h1>
 
         <form
@@ -120,7 +122,7 @@ export default function CreerActivite() {
         >
           <div>
             <label htmlFor="titre" className="block text-base font-medium text-ink mb-1">
-              Titre
+              {t("operateur.createActivity.titleLabel")}
             </label>
             <input
               id="titre"
@@ -129,7 +131,7 @@ export default function CreerActivite() {
               value={titre}
               onChange={(e) => setTitre(e.target.value)}
               className="w-full rounded-lg border border-ink/15 bg-white px-4 py-2 text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
-              placeholder="Ex: Randonnée au sommet du Toubkal"
+              placeholder={t("operateur.createActivity.titlePlaceholder")}
             />
             {fieldErrors.titre && (
               <p className="mt-1 text-base text-price" role="alert">
@@ -140,7 +142,7 @@ export default function CreerActivite() {
 
           <div>
             <label htmlFor="description" className="block text-base font-medium text-ink mb-1">
-              Description
+              {t("operateur.createActivity.description")}
             </label>
             <textarea
               ref={descriptionRef}
@@ -149,7 +151,7 @@ export default function CreerActivite() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full resize-none overflow-y-auto rounded-lg border border-ink/15 bg-white px-4 py-2 text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
-              placeholder="Décrivez l'activité..."
+              placeholder={t("operateur.createActivity.descriptionPlaceholder")}
             />
             {fieldErrors.description && (
               <p className="mt-1 text-base text-price" role="alert">
@@ -160,7 +162,7 @@ export default function CreerActivite() {
 
           <div>
             <label htmlFor="region" className="block text-base font-medium text-ink mb-1">
-              Région
+              {t("operateur.createActivity.region")}
             </label>
             <input
               id="region"
@@ -169,7 +171,7 @@ export default function CreerActivite() {
               value={region}
               onChange={(e) => setRegion(e.target.value)}
               className="w-full rounded-lg border border-ink/15 bg-white px-4 py-2 text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
-              placeholder="Ex: Toubkal, Haut Atlas"
+              placeholder={t("operateur.createActivity.regionPlaceholder")}
             />
             {fieldErrors.region && (
               <p className="mt-1 text-base text-price" role="alert">
@@ -180,7 +182,7 @@ export default function CreerActivite() {
 
           <div>
             <label htmlFor="id_categorie" className="block text-base font-medium text-ink mb-1">
-              Catégorie
+              {t("operateur.createActivity.category")}
             </label>
             <select
               id="id_categorie"
@@ -210,7 +212,7 @@ export default function CreerActivite() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="prix_mad" className="block text-base font-medium text-ink mb-1">
-                Prix (MAD)
+                {t("filters.price")}
               </label>
               <input
                 id="prix_mad"
@@ -221,7 +223,7 @@ export default function CreerActivite() {
                 value={prixMad}
                 onChange={(e) => setPrixMad(e.target.value)}
                 className="w-full rounded-lg border border-ink/15 bg-white px-4 py-2 text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
-                placeholder="850"
+                placeholder={t("operateur.createActivity.pricePlaceholder")}
               />
               {fieldErrors.prix_mad && (
                 <p className="mt-1 text-base text-price" role="alert">
@@ -232,7 +234,7 @@ export default function CreerActivite() {
 
             <div>
               <label htmlFor="duree_valeur" className="block text-base font-medium text-ink mb-1">
-                Durée
+                {t("filters.duration")}
               </label>
               <input
                 id="duree_valeur"
@@ -243,7 +245,7 @@ export default function CreerActivite() {
                 value={dureeValeur}
                 onChange={(e) => setDureeValeur(e.target.value)}
                 className="w-full rounded-lg border border-ink/15 bg-white px-4 py-2 text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
-                placeholder="2"
+                placeholder={t("operateur.createActivity.durationPlaceholder")}
               />
               {fieldErrors.duree_valeur && (
                 <p className="mt-1 text-base text-price" role="alert">
@@ -255,7 +257,7 @@ export default function CreerActivite() {
 
           <div>
             <label htmlFor="duree_unite" className="block text-base font-medium text-ink mb-1">
-              Unité de durée
+              {t("operateur.createActivity.durationUnit")}
             </label>
             <select
               id="duree_unite"
@@ -287,7 +289,7 @@ export default function CreerActivite() {
             disabled={isSubmitting}
             className="w-full rounded-full bg-cedre px-8 py-3 text-base font-medium text-cream shadow-md transition-colors hover:bg-cedre/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSubmitting ? "Création..." : "Créer l'activité"}
+            {isSubmitting ? t("operateur.createActivity.submitting") : t("operateur.createActivity.submit")}
           </button>
         </form>
       </div>

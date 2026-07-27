@@ -1,31 +1,23 @@
 import { useEffect, useState } from "react"
 import { Navigate, useNavigate, useParams } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import Header from "../../components/layout/Header"
 import { useAuth } from "../../context/AuthContext"
 import apiFetch from "../../services/api"
 import useAutoGrowTextarea from "../../hooks/useAutoGrowTextarea"
 
 const QUESTIONS_OUI_NON = [
-  { cle: "limite_participants", texte: "Limitez-vous le nombre de participants par groupe ?" },
-  { cle: "materiaux_locaux", texte: "Utilisez-vous des matériaux/produits locaux ?" },
-  { cle: "gestion_dechets", texte: "Avez-vous une politique de gestion des déchets ?" },
-  {
-    cle: "contribution_economique",
-    texte: "Votre activité contribue-t-elle économiquement à la communauté locale ?",
-  },
-  {
-    cle: "sensibilisation_environnementale",
-    texte: "Sensibilisez-vous les participants aux enjeux environnementaux locaux ?",
-  },
-  {
-    cle: "energies_renouvelables",
-    texte: "Utilisez-vous des sources d'énergie renouvelables (si applicable) ?",
-  },
+  { cle: "limite_participants", texteKey: "operateur.ecoQuestionnaire.limitParticipants" },
+  { cle: "materiaux_locaux", texteKey: "operateur.ecoQuestionnaire.localMaterials" },
+  { cle: "gestion_dechets", texteKey: "operateur.ecoQuestionnaire.wasteManagement" },
+  { cle: "contribution_economique", texteKey: "operateur.ecoQuestionnaire.economicContribution" },
+  { cle: "sensibilisation_environnementale", texteKey: "operateur.ecoQuestionnaire.environmentalAwareness" },
+  { cle: "energies_renouvelables", texteKey: "operateur.ecoQuestionnaire.renewableEnergy" },
 ]
 
 const QUESTION_TEXTE_LIBRE = {
   cle: "certifications_labels",
-  texte: "Avez-vous des certifications ou labels environnementaux existants ?",
+  texteKey: "operateur.ecoQuestionnaire.certifications",
 }
 
 function reponsesInitiales() {
@@ -39,6 +31,7 @@ function reponsesInitiales() {
 }
 
 export default function QuestionnaireEco() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -93,7 +86,7 @@ export default function QuestionnaireEco() {
       <div className="min-h-screen bg-cream">
         <Header />
         <p className="mx-auto max-w-4xl px-6 py-12 text-ink/70">
-          Cette page est réservée aux opérateurs.
+          {t("operateur.verification.operatorOnly")}
         </p>
       </div>
     )
@@ -109,7 +102,7 @@ export default function QuestionnaireEco() {
 
     const reponseManquante = QUESTIONS_OUI_NON.some((question) => !reponses[question.cle])
     if (reponseManquante) {
-      setError("Merci de répondre Oui ou Non à chaque question avant de valider.")
+      setError(t("operateur.ecoQuestionnaire.missingAnswer"))
       return
     }
 
@@ -121,7 +114,7 @@ export default function QuestionnaireEco() {
       })
       navigate("/operateur/dashboard")
     } catch {
-      setError("Une erreur est survenue. Veuillez réessayer.")
+      setError(t("common.genericError"))
     } finally {
       setIsSubmitting(false)
     }
@@ -132,16 +125,16 @@ export default function QuestionnaireEco() {
       <Header />
 
       <div className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink mb-1">Questionnaire éco</h1>
+        <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink mb-1">{t("admin.validation.ecoQuestionnaire")}</h1>
         {activite && <p className="text-ink/70 mb-8">{activite.titre}</p>}
 
         {loadError && (
           <p className="text-price">
-            Impossible de charger l&apos;activité pour le moment. Veuillez réessayer plus tard.
+            {t("operateur.ecoQuestionnaire.loadError")}
           </p>
         )}
 
-        {!loadError && isLoading && <p className="text-ink/70">Chargement...</p>}
+        {!loadError && isLoading && <p className="text-ink/70">{t("common.loading")}</p>}
 
         {!loadError && !isLoading && (
           <form
@@ -152,22 +145,25 @@ export default function QuestionnaireEco() {
             {QUESTIONS_OUI_NON.map((question, index) => (
               <div key={question.cle} className="rounded-lg border border-ink/15 bg-white p-4">
                 <p className="mb-3 text-base font-medium text-ink">
-                  {index + 1}. {question.texte}
+                  {index + 1}. {t(question.texteKey)}
                 </p>
 
                 <div className="mb-3 flex gap-2">
-                  {["Oui", "Non"].map((option) => (
+                  {[
+                    { value: "Oui", labelKey: "operateur.ecoQuestionnaire.yes" },
+                    { value: "Non", labelKey: "operateur.ecoQuestionnaire.no" },
+                  ].map((option) => (
                     <button
-                      key={option}
+                      key={option.value}
                       type="button"
-                      onClick={() => updateReponse(question.cle, option)}
+                      onClick={() => updateReponse(question.cle, option.value)}
                       className={`rounded-full border px-5 py-1.5 text-base font-medium transition-colors ${
-                        reponses[question.cle] === option
+                        reponses[question.cle] === option.value
                           ? "border-cedre bg-cedre text-cream"
                           : "border-ink/15 text-ink hover:border-cedre/50"
                       }`}
                     >
-                      {option}
+                      {t(option.labelKey)}
                     </button>
                   ))}
                 </div>
@@ -176,7 +172,7 @@ export default function QuestionnaireEco() {
                   type="text"
                   value={reponses[`${question.cle}_details`]}
                   onChange={(e) => updateReponse(`${question.cle}_details`, e.target.value)}
-                  placeholder="Détails (optionnel)"
+                  placeholder={t("operateur.ecoQuestionnaire.detailsPlaceholder")}
                   className="w-full rounded-lg border border-ink/15 bg-white px-4 py-2 text-base text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
                 />
               </div>
@@ -187,7 +183,7 @@ export default function QuestionnaireEco() {
                 htmlFor={QUESTION_TEXTE_LIBRE.cle}
                 className="mb-3 block text-base font-medium text-ink"
               >
-                7. {QUESTION_TEXTE_LIBRE.texte}
+                7. {t(QUESTION_TEXTE_LIBRE.texteKey)}
               </label>
               <textarea
                 ref={texteLibreRef}
@@ -195,7 +191,7 @@ export default function QuestionnaireEco() {
                 rows={3}
                 value={reponses[QUESTION_TEXTE_LIBRE.cle]}
                 onChange={(e) => updateReponse(QUESTION_TEXTE_LIBRE.cle, e.target.value)}
-                placeholder="Ex: Label Green Key, certification Clef Verte..."
+                placeholder={t("operateur.ecoQuestionnaire.certificationsPlaceholder")}
                 className="w-full resize-none overflow-y-auto rounded-lg border border-ink/15 bg-white px-4 py-2 text-base text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
               />
             </div>
@@ -211,7 +207,7 @@ export default function QuestionnaireEco() {
               disabled={isSubmitting}
               className="w-full rounded-full bg-cedre px-8 py-3 text-base font-medium text-cream shadow-md transition-colors hover:bg-cedre/90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmitting ? "Envoi..." : "Envoyer le questionnaire"}
+              {isSubmitting ? t("common.sending") : t("operateur.ecoQuestionnaire.submit")}
             </button>
           </form>
         )}

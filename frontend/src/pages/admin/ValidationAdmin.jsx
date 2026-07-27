@@ -1,42 +1,24 @@
 import { useEffect, useState } from "react"
 import { Link, Navigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { CheckCircle } from "lucide-react"
 import Header from "../../components/layout/Header"
 import { useAuth } from "../../context/AuthContext"
 import apiFetch, { API_BASE_URL } from "../../services/api"
+import {
+  TYPES_REQUIS,
+  LABELS_DOCUMENT,
+  STATUT_DOCUMENT_CLASSNAMES,
+  STATUTS_DOCUMENT_LABEL_KEYS_ADMIN,
+} from "../../constants/operateur"
+import { formatPrixMAD } from "../../utils/format"
 
 const STORAGE_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, "")
 
 const ROLES = {
-  voyageur: "Voyageur",
-  operateur: "Opérateur",
-  admin: "Admin",
-}
-
-const TYPES_REQUIS = {
-  guide: ["certificat_guide", "assurance"],
-  entreprise: ["registre_commerce", "assurance"],
-}
-
-const LABELS_DOCUMENT = {
-  certificat_guide: "Certificat de guide",
-  assurance: "Attestation d'assurance",
-  registre_commerce: "Registre de commerce",
-  autre: "Autre document",
-}
-
-const STATUTS_DOCUMENT = {
-  en_attente: { label: "En attente", className: "border border-ocre/30 bg-ocre/15 text-ink" },
-  valide: { label: "Validé", className: "bg-cedre/10 text-cedre" },
-  refuse: { label: "Refusé", className: "bg-argile/10 text-argile" },
-}
-
-function formatPrixMAD(prix) {
-  return new Intl.NumberFormat("fr-MA", {
-    style: "currency",
-    currency: "MAD",
-    maximumFractionDigits: 0,
-  }).format(prix)
+  voyageur: "auth.register.roleVoyageur",
+  operateur: "auth.register.roleOperateur",
+  admin: "admin.validation.roleAdmin",
 }
 
 function formatLabelReponse(cle) {
@@ -63,11 +45,17 @@ async function ouvrirDocument(documentId) {
 }
 
 function DocumentReviewRow({ type, document, onReview }) {
+  const { t } = useTranslation()
   const [commentaire, setCommentaire] = useState("")
   const [showRefusForm, setShowRefusForm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const statutInfo = document ? STATUTS_DOCUMENT[document.statut] : null
+  const statutInfo = document
+    ? {
+        label: t(STATUTS_DOCUMENT_LABEL_KEYS_ADMIN[document.statut]),
+        className: STATUT_DOCUMENT_CLASSNAMES[document.statut],
+      }
+    : null
 
   async function handleValider() {
     setIsSubmitting(true)
@@ -92,13 +80,13 @@ function DocumentReviewRow({ type, document, onReview }) {
   return (
     <div className="rounded-lg border border-ink/10 bg-white px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-medium text-ink">{LABELS_DOCUMENT[type]}</p>
+        <p className="font-medium text-ink">{t(LABELS_DOCUMENT[type])}</p>
 
         <div className="flex items-center gap-2">
           <span
             className={`rounded-full px-3 py-1 text-sm font-medium ${statutInfo?.className ?? "bg-ink/10 text-ink/60"}`}
           >
-            {statutInfo?.label ?? "Non envoyé"}
+            {statutInfo?.label ?? t("operateur.documentStatus.notSent")}
           </span>
 
           {document && (
@@ -108,7 +96,7 @@ function DocumentReviewRow({ type, document, onReview }) {
                 onClick={() => ouvrirDocument(document.id)}
                 className="text-sm font-medium text-cedre hover:underline"
               >
-                Voir
+                {t("admin.validation.view")}
               </button>
 
               {document.statut !== "valide" && (
@@ -118,7 +106,7 @@ function DocumentReviewRow({ type, document, onReview }) {
                   onClick={handleValider}
                   className="rounded-full bg-cedre px-3 py-1 text-sm font-medium text-cream transition-colors hover:bg-cedre/90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Valider
+                  {t("admin.validation.approve")}
                 </button>
               )}
 
@@ -129,7 +117,7 @@ function DocumentReviewRow({ type, document, onReview }) {
                   onClick={() => setShowRefusForm((current) => !current)}
                   className="rounded-full border border-argile px-3 py-1 text-sm font-medium text-argile transition-colors hover:bg-argile hover:text-cream disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Refuser
+                  {t("admin.validation.reject")}
                 </button>
               )}
             </>
@@ -139,7 +127,7 @@ function DocumentReviewRow({ type, document, onReview }) {
 
       {document?.statut === "refuse" && document.commentaire_admin && (
         <p className="mt-2 text-sm text-ink/70">
-          <span className="font-medium">Motif communiqué : </span>
+          <span className="font-medium">{t("admin.validation.reasonGivenLabel")}</span>
           {document.commentaire_admin}
         </p>
       )}
@@ -150,7 +138,7 @@ function DocumentReviewRow({ type, document, onReview }) {
             type="text"
             value={commentaire}
             onChange={(event) => setCommentaire(event.target.value)}
-            placeholder="Motif du refus (optionnel)"
+            placeholder={t("admin.validation.rejectReasonPlaceholder")}
             className="min-w-[220px] flex-1 rounded-lg border border-ink/15 bg-white px-3 py-1.5 text-sm text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
           />
           <button
@@ -159,7 +147,7 @@ function DocumentReviewRow({ type, document, onReview }) {
             onClick={handleRefuser}
             className="rounded-full bg-argile px-4 py-1.5 text-sm font-medium text-cream transition-colors hover:bg-argile/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Confirmer le refus
+            {t("admin.validation.confirmRejection")}
           </button>
         </div>
       )}
@@ -168,6 +156,7 @@ function DocumentReviewRow({ type, document, onReview }) {
 }
 
 function DocumentsOperateur({ compte }) {
+  const { t } = useTranslation()
   const [documents, setDocuments] = useState(null)
   const [error, setError] = useState(false)
 
@@ -198,11 +187,11 @@ function DocumentsOperateur({ compte }) {
   const typesRequis = TYPES_REQUIS[compte.type_operateur] ?? []
 
   if (error) {
-    return <p className="mt-3 text-sm text-argile">Impossible de charger les documents.</p>
+    return <p className="mt-3 text-sm text-argile">{t("admin.validation.cannotLoadDocuments")}</p>
   }
 
   if (documents === null) {
-    return <p className="mt-3 text-sm text-ink/50">Chargement des documents...</p>
+    return <p className="mt-3 text-sm text-ink/50">{t("admin.validation.loadingDocuments")}</p>
   }
 
   return (
@@ -220,6 +209,7 @@ function DocumentsOperateur({ compte }) {
 }
 
 function CompteAValider({ compte, onValide }) {
+  const { t } = useTranslation()
   const [isValidating, setIsValidating] = useState(false)
   const [error, setError] = useState(null)
 
@@ -233,8 +223,12 @@ function CompteAValider({ compte, onValide }) {
       const documentsManquants = err.data?.documents_manquants
       setError(
         documentsManquants?.length
-          ? `Documents non validés : ${documentsManquants.map((type) => LABELS_DOCUMENT[type] ?? type).join(", ")}.`
-          : "Impossible de valider ce compte."
+          ? t("admin.validation.missingDocuments", {
+              list: documentsManquants
+                .map((type) => (LABELS_DOCUMENT[type] ? t(LABELS_DOCUMENT[type]) : type))
+                .join(", "),
+            })
+          : t("admin.validation.cannotValidateAccount")
       )
     } finally {
       setIsValidating(false)
@@ -247,14 +241,14 @@ function CompteAValider({ compte, onValide }) {
         <div>
           <p className="font-medium text-ink">{compte.name}</p>
           <p className="text-base text-ink/70">
-            {compte.email} · {ROLES[compte.role] ?? compte.role}
+            {compte.email} · {ROLES[compte.role] ? t(ROLES[compte.role]) : compte.role}
           </p>
           {compte.role === "operateur" && (
             <Link
               to={`/recherche?id_operateur=${compte.id}`}
               className="mt-1 inline-block text-sm font-medium text-cedre hover:underline"
             >
-              Voir ses autres activités →
+              {t("admin.validation.viewOtherActivities")}
             </Link>
           )}
         </div>
@@ -264,7 +258,7 @@ function CompteAValider({ compte, onValide }) {
           onClick={handleValider}
           className="rounded-full bg-cedre px-5 py-2 text-sm font-medium text-cream shadow-sm transition-colors hover:bg-cedre/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isValidating ? "..." : "Valider le compte"}
+          {isValidating ? "..." : t("admin.validation.validateAccount")}
         </button>
       </div>
 
@@ -280,8 +274,9 @@ function CompteAValider({ compte, onValide }) {
 }
 
 function ComptesAValider({ comptes, onValide }) {
+  const { t } = useTranslation()
   if (comptes.length === 0) {
-    return <EtatVide message="Aucun compte en attente de validation." />
+    return <EtatVide message={t("admin.validation.noAccountsPending")} />
   }
 
   return (
@@ -294,6 +289,7 @@ function ComptesAValider({ comptes, onValide }) {
 }
 
 function ActiviteAValiderCard({ activite, onValider, validatingId }) {
+  const { t, i18n } = useTranslation()
   const [questionnaire, setQuestionnaire] = useState(undefined)
   const [isValidatingQuestionnaire, setIsValidatingQuestionnaire] = useState(false)
   const [questionnaireError, setQuestionnaireError] = useState(null)
@@ -331,7 +327,7 @@ function ActiviteAValiderCard({ activite, onValider, validatingId }) {
       })
       setQuestionnaire(updated)
     } catch {
-      setQuestionnaireError("Impossible de valider ce questionnaire.")
+      setQuestionnaireError(t("admin.validation.cannotValidateQuestionnaire"))
     } finally {
       setIsValidatingQuestionnaire(false)
     }
@@ -347,7 +343,7 @@ function ActiviteAValiderCard({ activite, onValider, validatingId }) {
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-base text-ink/70">
             {activite.categorie?.nom && <span>{activite.categorie.nom}</span>}
             <span>{activite.region}</span>
-            <span className="font-semibold text-price">{formatPrixMAD(activite.prix_mad)}</span>
+            <span className="font-semibold text-price">{formatPrixMAD(activite.prix_mad, i18n.language)}</span>
           </div>
 
           {activite.description && (
@@ -368,19 +364,19 @@ function ActiviteAValiderCard({ activite, onValider, validatingId }) {
           )}
 
           {questionnaire === undefined && (
-            <p className="mt-3 text-base text-ink/50">Chargement du questionnaire éco...</p>
+            <p className="mt-3 text-base text-ink/50">{t("admin.validation.loadingQuestionnaire")}</p>
           )}
 
           {questionnaire === null && (
-            <p className="mt-3 text-base text-ink/50">Aucun questionnaire éco soumis.</p>
+            <p className="mt-3 text-base text-ink/50">{t("admin.validation.noQuestionnaire")}</p>
           )}
 
           {questionnaire && (
             <div className="mt-3 rounded-lg border border-cedre/20 bg-cedre/5 p-3">
               <p className="mb-2 text-base font-medium text-ink">
-                Questionnaire éco
+                {t("admin.validation.ecoQuestionnaire")}
                 {questionnaire.valide_par_admin && (
-                  <span className="ml-2 text-sm font-normal text-cedre">Validé</span>
+                  <span className="ml-2 text-sm font-normal text-cedre">{t("admin.validation.validated")}</span>
                 )}
               </p>
               <dl className="space-y-1 text-base text-ink/80">
@@ -407,7 +403,7 @@ function ActiviteAValiderCard({ activite, onValider, validatingId }) {
             onClick={() => onValider(activite.id)}
             className="rounded-full bg-cedre px-5 py-2 text-sm font-medium text-cream shadow-sm transition-colors hover:bg-cedre/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {validatingId === activite.id ? "..." : "Valider l'activité"}
+            {validatingId === activite.id ? "..." : t("admin.validation.validateActivity")}
           </button>
 
           {questionnaire && !questionnaire.valide_par_admin && (
@@ -417,7 +413,7 @@ function ActiviteAValiderCard({ activite, onValider, validatingId }) {
               onClick={handleValiderQuestionnaire}
               className="rounded-full border border-cedre px-5 py-2 text-sm font-medium text-cedre transition-colors hover:bg-cedre hover:text-cream disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isValidatingQuestionnaire ? "..." : "Valider le questionnaire"}
+              {isValidatingQuestionnaire ? "..." : t("admin.validation.validateQuestionnaire")}
             </button>
           )}
         </div>
@@ -427,8 +423,9 @@ function ActiviteAValiderCard({ activite, onValider, validatingId }) {
 }
 
 function ActivitesAValider({ activites, onValider, validatingId }) {
+  const { t } = useTranslation()
   if (activites.length === 0) {
-    return <EtatVide message="Aucune activité en attente de validation." />
+    return <EtatVide message={t("admin.validation.noActivitiesPending")} />
   }
 
   return (
@@ -446,6 +443,7 @@ function ActivitesAValider({ activites, onValider, validatingId }) {
 }
 
 export default function ValidationAdmin() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [comptes, setComptes] = useState([])
   const [activites, setActivites] = useState([])
@@ -497,7 +495,7 @@ export default function ValidationAdmin() {
       <div className="min-h-screen bg-cream">
         <Header />
         <p className="mx-auto max-w-4xl px-6 py-12 text-ink/70">
-          Cette page est réservée aux administrateurs.
+          {t("admin.validation.adminOnly")}
         </p>
       </div>
     )
@@ -513,7 +511,7 @@ export default function ValidationAdmin() {
       await apiFetch(`/admin/activites/${id}/valider`, { method: "PUT" })
       setActivites((current) => current.filter((activite) => activite.id !== id))
     } catch {
-      setError(new Error("Impossible de valider cette activité."))
+      setError(new Error(t("admin.validation.cannotValidateActivity")))
     } finally {
       setValidatingId(null)
     }
@@ -525,32 +523,32 @@ export default function ValidationAdmin() {
 
       <div className="mx-auto max-w-full px-6 py-12">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink">Validation admin</h1>
+          <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink">{t("admin.validation.title")}</h1>
           <Link
             to="/admin/dashboard"
             className="rounded-full bg-cedre px-6 py-3 text-sm font-medium text-cream shadow-sm transition-colors hover:bg-cedre/90"
           >
-            Voir le dashboard CRM →
+            {t("admin.validation.crmDashboardLink")}
           </Link>
         </div>
 
         {error && (
           <p className="mb-6 text-price" role="alert">
-            Une erreur est survenue. Veuillez réessayer.
+            {t("common.genericError")}
           </p>
         )}
 
         {isLoading ? (
-          <p className="text-ink/70">Chargement...</p>
+          <p className="text-ink/70">{t("admin.validation.loading")}</p>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <section className="rounded-2xl border border-ink/10 bg-cream p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-ink mb-4">Comptes à valider</h2>
+              <h2 className="text-lg font-semibold text-ink mb-4">{t("admin.validation.accountsTitle")}</h2>
               <ComptesAValider comptes={comptes} onValide={handleCompteValide} />
             </section>
 
             <section className="rounded-2xl border border-ink/10 bg-cream p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-ink mb-4">Activités à valider</h2>
+              <h2 className="text-lg font-semibold text-ink mb-4">{t("admin.validation.activitiesTitle")}</h2>
               <ActivitesAValider
                 activites={activites}
                 onValider={handleValiderActivite}

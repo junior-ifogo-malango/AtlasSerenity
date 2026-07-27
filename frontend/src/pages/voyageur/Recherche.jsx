@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import Header from "../../components/layout/Header"
 import ActiviteCard from "../../components/ui/ActiviteCard"
 import FiltresBar from "../../components/ui/FiltresBar"
@@ -20,6 +21,7 @@ function ActiviteCardSkeleton() {
 }
 
 export default function Recherche() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const q = searchParams.get("q") ?? ""
@@ -149,27 +151,27 @@ export default function Recherche() {
             type="text"
             value={inputValue}
             onChange={(event) => setInputValue(event.target.value)}
-            placeholder="Rechercher une activité, une région..."
+            placeholder={t("search.placeholder")}
             className="w-full bg-transparent text-base text-ink placeholder:text-ink/60 focus:outline-none"
           />
         </div>
 
         <h2 className="font-fraunces text-2xl font-semibold text-ink mb-6">
           {idOperateur
-            ? "Activités de cet opérateur"
+            ? t("voyageur.search.operatorActivities")
             : q
-              ? `Résultats pour « ${q} »`
-              : "Toutes les activités"}
+              ? t("voyageur.search.resultsForQuery", { query: q })
+              : t("voyageur.search.allActivities")}
         </h2>
 
         {error && (
           <p className="text-price">
-            Impossible de charger les activités pour le moment. Veuillez réessayer plus tard.
+            {t("voyageur.home.loadError")}
           </p>
         )}
 
         {!error && !isLoading && activites.length === 0 && (
-          <p className="text-ink/70">Aucune activité ne correspond à votre recherche.</p>
+          <p className="text-ink/70">{t("voyageur.search.noResults")}</p>
         )}
 
         {!error && (

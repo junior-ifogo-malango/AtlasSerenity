@@ -1,41 +1,34 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import Header from "../../components/layout/Header"
 import { useAuth } from "../../context/AuthContext"
 import apiFetch from "../../services/api"
+import { formatPrixMAD, formatDateDispo, formatHeureDispo } from "../../utils/format"
 
-const STATUTS = {
-  en_attente: { label: "En attente", className: "bg-amber-100 text-amber-800" },
-  confirmee: { label: "Confirmée", className: "bg-cedre/10 text-cedre" },
-  annulee: { label: "Annulée", className: "bg-price/10 text-price" },
+const STATUT_CLASSNAMES = {
+  en_attente: "bg-amber-100 text-amber-800",
+  confirmee: "bg-cedre/10 text-cedre",
+  annulee: "bg-price/10 text-price",
 }
 
-function formatPrixMAD(prix) {
-  return new Intl.NumberFormat("fr-MA", {
-    style: "currency",
-    currency: "MAD",
-    maximumFractionDigits: 0,
-  }).format(prix)
-}
-
-function formatDateDispo(dateDispo) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    weekday: "short",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(`${dateDispo}T00:00:00`))
-}
-
-function formatHeureDispo(heureDispo) {
-  return heureDispo.slice(0, 5)
+const STATUT_LABEL_KEYS = {
+  en_attente: "operateur.dashboard.statutPending",
+  confirmee: "voyageur.reservations.statutConfirmed",
+  annulee: "voyageur.reservations.statutCancelled",
 }
 
 function ReservationCard({ reservation }) {
-  const statutInfo = STATUTS[reservation.statut] ?? {
-    label: reservation.statut,
-    className: "bg-ink/10 text-ink",
-  }
+  const { t, i18n } = useTranslation()
+  const statutInfo = STATUT_LABEL_KEYS[reservation.statut]
+    ? {
+        label: t(STATUT_LABEL_KEYS[reservation.statut]),
+        className: STATUT_CLASSNAMES[reservation.statut],
+      }
+    : {
+        label: reservation.statut,
+        className: "bg-ink/10 text-ink",
+      }
 
   return (
     <div className="rounded-2xl border border-ink/10 bg-cream p-5 shadow-sm">
@@ -49,15 +42,15 @@ function ReservationCard({ reservation }) {
       </div>
 
       <p className="mt-2 text-base text-ink/70">
-        {formatDateDispo(reservation.disponibilite.date_dispo)} à{" "}
-        {formatHeureDispo(reservation.disponibilite.heure_dispo)}
+        {formatDateDispo(reservation.disponibilite.date_dispo, i18n.language)}{" "}
+        {t("operateur.availability.atTime", { time: formatHeureDispo(reservation.disponibilite.heure_dispo) })}
       </p>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-ink/10 pt-4 text-base">
         <span className="text-ink/70">
-          {reservation.nombre_personnes} personne{reservation.nombre_personnes > 1 ? "s" : ""}
+          {t("voyageur.reservations.peopleCount", { count: reservation.nombre_personnes })}
         </span>
-        <span className="font-semibold text-price">{formatPrixMAD(reservation.prix_paye)}</span>
+        <span className="font-semibold text-price">{formatPrixMAD(reservation.prix_paye, i18n.language)}</span>
       </div>
 
       <p className="mt-2 text-sm text-ink/50">N° {reservation.numero_reservation}</p>
@@ -76,6 +69,7 @@ function ReservationCardSkeleton() {
 }
 
 export default function MesReservations() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [reservations, setReservations] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -122,12 +116,12 @@ export default function MesReservations() {
 
       <section className="mx-auto max-w-4xl px-6 py-12">
         <h1 className="font-fraunces text-2xl font-semibold text-ink mb-6">
-          Mes réservations
+          {t("nav.myReservations")}
         </h1>
 
         {error && (
           <p className="text-price">
-            Impossible de charger vos réservations pour le moment. Veuillez réessayer plus tard.
+            {t("voyageur.reservations.loadError")}
           </p>
         )}
 
@@ -142,13 +136,13 @@ export default function MesReservations() {
         {!error && !isLoading && reservations.length === 0 && (
           <div className="flex flex-col items-center gap-4 py-16 text-center">
             <p className="font-fraunces text-2xl font-semibold text-ink">
-              Aucune réservation dans votre panier
+              {t("voyageur.reservations.empty")}
             </p>
             <Link
               to="/recherche"
               className="rounded-full bg-cedre px-6 py-2.5 text-base font-medium text-cream shadow-sm transition-colors hover:bg-cedre/90"
             >
-              Trouver une activité
+              {t("search.submit")}
             </Link>
           </div>
         )}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import {
   Binoculars,
   Bike,
@@ -65,6 +66,7 @@ function Pastille({ isSelected, onClick, ariaLabel, children }) {
 }
 
 export default function CategoriesBar({ selectedId, onSelect, prefix, categories: categoriesFournies }) {
+  const { t } = useTranslation()
   const [categoriesChargees, setCategoriesChargees] = useState([])
   const [isLoading, setIsLoading] = useState(categoriesFournies === undefined)
   const [error, setError] = useState(null)
@@ -115,7 +117,7 @@ export default function CategoriesBar({ selectedId, onSelect, prefix, categories
         <Pastille
           isSelected={selectedId === null}
           onClick={() => onSelect(null)}
-          ariaLabel="Toutes les catégories"
+          ariaLabel={t("categories.all")}
         >
           <LayoutGrid className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
         </Pastille>

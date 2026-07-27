@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react"
 import { Link, useParams, useSearchParams } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import apiFetch from "../../services/api"
 
 export default function VerifierEmail() {
+  const { t } = useTranslation()
   const { id, hash } = useParams()
   const [searchParams] = useSearchParams()
   const expires = searchParams.get("expires")
@@ -24,23 +26,23 @@ export default function VerifierEmail() {
     <div className="flex min-h-screen items-center justify-center bg-cream px-6">
       <div className="w-full max-w-sm text-center">
         <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink mb-4">
-          Vérification de l'email
+          {t("auth.verifyEmail.title")}
         </h1>
 
         {status === "loading" && (
-          <p className="text-base text-ink/70">Vérification en cours...</p>
+          <p className="text-base text-ink/70">{t("auth.verifyEmail.verifying")}</p>
         )}
 
         {status === "success" && (
           <div className="rounded-lg border border-cedre/30 bg-cedre/5 p-4">
             <p className="text-base text-ink">
-              Votre adresse email a bien été vérifiée. Vous pouvez maintenant vous connecter.
+              {t("auth.verifyEmail.success")}
             </p>
             <Link
               to="/login"
               className="mt-4 inline-block text-base font-medium text-cedre hover:underline"
             >
-              Se connecter
+              {t("auth.login.submit")}
             </Link>
           </div>
         )}
@@ -48,13 +50,13 @@ export default function VerifierEmail() {
         {status === "error" && (
           <div className="rounded-lg border border-price/30 bg-price/5 p-4">
             <p className="text-base text-price">
-              Ce lien de vérification est invalide ou a expiré.
+              {t("auth.verifyEmail.failure")}
             </p>
             <Link
               to="/login"
               className="mt-4 inline-block text-base font-medium text-cedre hover:underline"
             >
-              Retour à la connexion
+              {t("auth.forgotPassword.backToLogin")}
             </Link>
           </div>
         )}

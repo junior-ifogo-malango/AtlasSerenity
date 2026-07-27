@@ -1,23 +1,13 @@
 import { useEffect, useState } from "react"
 import { Navigate, useParams } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import Header from "../../components/layout/Header"
 import { useAuth } from "../../context/AuthContext"
 import apiFetch from "../../services/api"
-
-function formatDateDispo(dateDispo) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    weekday: "short",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(`${dateDispo}T00:00:00`))
-}
-
-function formatHeureDispo(heureDispo) {
-  return heureDispo.slice(0, 5)
-}
+import { formatDateDispo, formatHeureDispo } from "../../utils/format"
 
 export default function GererDisponibilites() {
+  const { t, i18n } = useTranslation()
   const { id } = useParams()
   const { user } = useAuth()
 
@@ -77,7 +67,7 @@ export default function GererDisponibilites() {
       <div className="min-h-screen bg-cream">
         <Header />
         <p className="mx-auto max-w-4xl px-6 py-12 text-ink/70">
-          Cette page est réservée aux opérateurs.
+          {t("operateur.verification.operatorOnly")}
         </p>
       </div>
     )
@@ -107,7 +97,7 @@ export default function GererDisponibilites() {
       if (err.status === 422 && err.data?.errors) {
         setFieldErrors(err.data.errors)
       } else {
-        setFormError("Une erreur est survenue. Veuillez réessayer.")
+        setFormError(t("common.genericError"))
       }
     } finally {
       setIsSubmitting(false)
@@ -120,23 +110,23 @@ export default function GererDisponibilites() {
 
       <div className="mx-auto max-w-3xl px-6 py-12">
         <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink mb-1">
-          Gérer les disponibilités
+          {t("operateur.availability.title")}
         </h1>
         {activite && <p className="text-ink/70 mb-8">{activite.titre}</p>}
 
         {error && (
           <p className="text-price">
-            Impossible de charger les disponibilités pour le moment. Veuillez réessayer plus tard.
+            {t("operateur.availability.loadError")}
           </p>
         )}
 
-        {!error && isLoading && <p className="text-ink/70">Chargement...</p>}
+        {!error && isLoading && <p className="text-ink/70">{t("common.loading")}</p>}
 
         {!error && !isLoading && (
           <>
             <div className="mb-8 space-y-3">
               {disponibilites.length === 0 && (
-                <p className="text-ink/70">Aucune disponibilité pour cette activité.</p>
+                <p className="text-ink/70">{t("operateur.availability.empty")}</p>
               )}
 
               {disponibilites.map((dispo) => (
@@ -146,18 +136,23 @@ export default function GererDisponibilites() {
                 >
                   <div>
                     <span className="font-medium capitalize text-ink">
-                      {formatDateDispo(dispo.date_dispo)}
+                      {formatDateDispo(dispo.date_dispo, i18n.language)}
                     </span>{" "}
-                    <span className="text-ink/70">à {formatHeureDispo(dispo.heure_dispo)}</span>
+                    <span className="text-ink/70">
+                      {t("operateur.availability.atTime", { time: formatHeureDispo(dispo.heure_dispo) })}
+                    </span>
                   </div>
                   <span className="text-base text-ink/70">
-                    {dispo.places_restantes} / {dispo.places_totales} places restantes
+                    {t("operateur.availability.remainingSpots", {
+                      remaining: dispo.places_restantes,
+                      total: dispo.places_totales,
+                    })}
                   </span>
                 </div>
               ))}
             </div>
 
-            <h2 className="text-lg font-semibold text-ink mb-3">Ajouter un créneau</h2>
+            <h2 className="text-lg font-semibold text-ink mb-3">{t("operateur.availability.addSlotTitle")}</h2>
 
             <form
               onSubmit={handleSubmit}
@@ -167,7 +162,7 @@ export default function GererDisponibilites() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="date_dispo" className="block text-base font-medium text-ink mb-1">
-                    Date
+                    {t("operateur.availability.date")}
                   </label>
                   <input
                     id="date_dispo"
@@ -186,7 +181,7 @@ export default function GererDisponibilites() {
 
                 <div>
                   <label htmlFor="heure_dispo" className="block text-base font-medium text-ink mb-1">
-                    Heure
+                    {t("operateur.availability.time")}
                   </label>
                   <input
                     id="heure_dispo"
@@ -206,7 +201,7 @@ export default function GererDisponibilites() {
 
               <div>
                 <label htmlFor="places_totales" className="block text-base font-medium text-ink mb-1">
-                  Places totales
+                  {t("operateur.availability.totalSpots")}
                 </label>
                 <input
                   id="places_totales"
@@ -216,7 +211,7 @@ export default function GererDisponibilites() {
                   value={placesTotales}
                   onChange={(e) => setPlacesTotales(e.target.value)}
                   className="w-full max-w-[10rem] rounded-lg border border-ink/15 bg-white px-4 py-2 text-ink focus:outline-none focus:ring-2 focus:ring-cedre"
-                  placeholder="10"
+                  placeholder={t("operateur.availability.totalSpotsPlaceholder")}
                 />
                 {fieldErrors.places_totales && (
                   <p className="mt-1 text-base text-price" role="alert">
@@ -236,7 +231,7 @@ export default function GererDisponibilites() {
                 disabled={isSubmitting}
                 className="rounded-full bg-cedre px-8 py-3 text-base font-medium text-cream shadow-md transition-colors hover:bg-cedre/90 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSubmitting ? "Ajout..." : "Ajouter le créneau"}
+                {isSubmitting ? t("operateur.availability.adding") : t("operateur.availability.addSlot")}
               </button>
             </form>
           </>

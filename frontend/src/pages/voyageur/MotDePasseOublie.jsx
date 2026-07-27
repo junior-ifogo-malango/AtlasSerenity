@@ -1,8 +1,10 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import apiFetch from "../../services/api"
 
 export default function MotDePasseOublie() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState("")
   const [fieldErrors, setFieldErrors] = useState({})
   const [error, setError] = useState(null)
@@ -25,7 +27,7 @@ export default function MotDePasseOublie() {
       if (err.status === 422 && err.data?.errors) {
         setFieldErrors(err.data.errors)
       } else {
-        setError("Une erreur est survenue. Veuillez réessayer.")
+        setError(t("common.genericError"))
       }
     } finally {
       setIsSubmitting(false)
@@ -36,20 +38,19 @@ export default function MotDePasseOublie() {
     <div className="flex min-h-screen items-center justify-center bg-cream px-6">
       <div className="w-full max-w-md">
         <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink text-center mb-8">
-          Mot de passe oublié
+          {t("auth.forgotPassword.title")}
         </h1>
 
         {isSubmitted ? (
           <div className="rounded-lg border border-cedre/30 bg-cedre/5 p-4 text-center">
             <p className="text-base text-ink">
-              Si un compte existe avec cette adresse email, un lien de réinitialisation vient
-              de vous être envoyé.
+              {t("auth.forgotPassword.submittedMessage")}
             </p>
             <Link
               to="/login"
               className="mt-4 inline-block text-base font-medium text-cedre hover:underline"
             >
-              Retour à la connexion
+              {t("auth.forgotPassword.backToLogin")}
             </Link>
           </div>
         ) : (
@@ -59,13 +60,12 @@ export default function MotDePasseOublie() {
             noValidate
           >
             <p className="text-base text-ink/70">
-              Indiquez votre adresse email, nous vous enverrons un lien pour réinitialiser
-              votre mot de passe.
+              {t("auth.forgotPassword.intro")}
             </p>
 
             <div>
               <label htmlFor="email" className="block text-base font-medium text-ink mb-1">
-                Email
+                {t("common.email")}
               </label>
               <input
                 id="email"
@@ -75,7 +75,7 @@ export default function MotDePasseOublie() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-lg border border-ink/15 bg-white px-4 py-2 text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
-                placeholder="vous@exemple.com"
+                placeholder={t("common.emailPlaceholder")}
               />
               {fieldErrors.email && (
                 <p className="mt-1 text-base text-price" role="alert">
@@ -95,12 +95,12 @@ export default function MotDePasseOublie() {
               disabled={isSubmitting}
               className="w-full rounded-full bg-cedre px-8 py-3 text-base font-medium text-cream shadow-md transition-colors hover:bg-cedre/90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmitting ? "Envoi..." : "Envoyer le lien"}
+              {isSubmitting ? t("common.sending") : t("auth.forgotPassword.submit")}
             </button>
 
             <p className="text-center text-sm text-ink/70">
               <Link to="/login" className="font-medium text-cedre hover:underline">
-                Retour à la connexion
+                {t("auth.forgotPassword.backToLogin")}
               </Link>
             </p>
           </form>

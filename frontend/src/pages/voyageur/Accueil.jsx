@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import Header from "../../components/layout/Header"
 import Hero from "../../components/ui/Hero"
 import ActiviteCard from "../../components/ui/ActiviteCard"
@@ -20,6 +21,7 @@ function ActiviteCardSkeleton() {
 }
 
 export default function Accueil() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [activites, setActivites] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -96,12 +98,12 @@ export default function Accueil() {
 
       <section className="mx-auto max-w-7xl px-6 py-12">
         <h2 className="font-fraunces text-2xl font-semibold text-ink mb-6">
-          Activités populaires
+          {t("voyageur.home.popularActivities")}
         </h2>
 
         {error && (
           <p className="text-price">
-            Impossible de charger les activités pour le moment. Veuillez réessayer plus tard.
+            {t("voyageur.home.loadError")}
           </p>
         )}
 

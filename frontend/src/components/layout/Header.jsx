@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { Check, Heart, Globe, Menu, ShoppingCart, User } from "lucide-react"
 import { useAuth } from "../../context/AuthContext"
 import RechercheBar from "../ui/RechercheBar"
@@ -12,6 +13,7 @@ const MOBILE_MENU_ITEM_CLASSES =
   "block rounded-lg px-3 py-2 text-sm text-ink hover:bg-cream"
 
 function CompteMenu() {
+  const { t } = useTranslation()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
@@ -60,7 +62,7 @@ function CompteMenu() {
                 onClick={() => setIsOpen(false)}
                 className="block px-4 py-2 text-sm hover:bg-cream"
               >
-                Validation
+                {t("nav.validation")}
               </Link>
               <Link
                 to="/admin/dashboard"
@@ -68,7 +70,7 @@ function CompteMenu() {
                 onClick={() => setIsOpen(false)}
                 className="block px-4 py-2 text-sm hover:bg-cream"
               >
-                Dashboard CRM
+                {t("nav.crmDashboard")}
               </Link>
               <div className="my-1 border-t border-ink/10" />
             </>
@@ -80,7 +82,7 @@ function CompteMenu() {
             onClick={() => setIsOpen(false)}
             className="block px-4 py-2 text-sm hover:bg-cream"
           >
-            Mon profil
+            {t("nav.myProfile")}
           </Link>
           {user.role === "operateur" ? (
             <>
@@ -90,7 +92,7 @@ function CompteMenu() {
                 onClick={() => setIsOpen(false)}
                 className="block px-4 py-2 text-sm hover:bg-cream"
               >
-                Dashboard opérateur
+                {t("nav.operatorDashboard")}
               </Link>
               <Link
                 to="/operateur/verification"
@@ -98,7 +100,7 @@ function CompteMenu() {
                 onClick={() => setIsOpen(false)}
                 className="block px-4 py-2 text-sm hover:bg-cream"
               >
-                Vérification du compte
+                {t("nav.accountVerification")}
               </Link>
             </>
           ) : (
@@ -108,7 +110,7 @@ function CompteMenu() {
               onClick={() => setIsOpen(false)}
               className="block px-4 py-2 text-sm hover:bg-cream"
             >
-              Mes réservations
+              {t("nav.myReservations")}
             </Link>
           )}
           <button
@@ -117,7 +119,7 @@ function CompteMenu() {
             onClick={handleLogout}
             className="block w-full px-4 py-2 text-left text-sm text-price hover:bg-cream"
           >
-            Se déconnecter
+            {t("nav.logout")}
           </button>
         </div>
       )}
@@ -126,6 +128,7 @@ function CompteMenu() {
 }
 
 function LangueMenu() {
+  const { i18n } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef(null)
 
@@ -140,6 +143,11 @@ function LangueMenu() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  function handleSelectLangue(langue) {
+    i18n.changeLanguage(langue)
+    setIsOpen(false)
+  }
+
   return (
     <div className="relative" ref={menuRef}>
       <button
@@ -150,7 +158,7 @@ function LangueMenu() {
         className={NAV_ITEM_CLASSES}
       >
         <Globe className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
-        FR/MAD
+        {i18n.language === "en" ? "EN/MAD" : "FR/MAD"}
       </button>
 
       {isOpen && (
@@ -161,23 +169,27 @@ function LangueMenu() {
           <button
             type="button"
             role="menuitemradio"
-            aria-checked="true"
-            onClick={() => setIsOpen(false)}
+            aria-checked={i18n.language === "fr"}
+            onClick={() => handleSelectLangue("fr")}
             className="flex w-full items-center justify-between gap-3 px-4 py-2 text-left text-sm hover:bg-cream"
           >
             Français / MAD
-            <Check className="h-4 w-4 shrink-0 text-cedre" strokeWidth={2} aria-hidden="true" />
+            {i18n.language === "fr" && (
+              <Check className="h-4 w-4 shrink-0 text-cedre" strokeWidth={2} aria-hidden="true" />
+            )}
           </button>
 
           <button
             type="button"
             role="menuitemradio"
-            aria-checked="false"
-            disabled
-            className="flex w-full cursor-not-allowed flex-col items-start gap-0.5 px-4 py-2 text-left text-sm text-ink/40"
+            aria-checked={i18n.language === "en"}
+            onClick={() => handleSelectLangue("en")}
+            className="flex w-full items-center justify-between gap-3 px-4 py-2 text-left text-sm hover:bg-cream"
           >
-            English / USD
-            <span className="text-sm text-ink/30">Bientôt disponible</span>
+            English / MAD
+            {i18n.language === "en" && (
+              <Check className="h-4 w-4 shrink-0 text-cedre" strokeWidth={2} aria-hidden="true" />
+            )}
           </button>
         </div>
       )}
@@ -186,6 +198,7 @@ function LangueMenu() {
 }
 
 function MobileMenu({ isOpen, onClose }) {
+  const { t, i18n } = useTranslation()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const menuRef = useRef(null)
@@ -219,9 +232,30 @@ function MobileMenu({ isOpen, onClose }) {
       <div className="mb-2 flex items-center justify-between px-3 py-2">
         <span className="flex items-center gap-2 text-sm font-medium text-ink">
           <Globe className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-          Français / MAD
+          {i18n.language === "en" ? "English / MAD" : "Français / MAD"}
         </span>
-        <Check className="h-4 w-4 shrink-0 text-cedre" strokeWidth={2} aria-hidden="true" />
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={() => i18n.changeLanguage("fr")}
+            aria-pressed={i18n.language === "fr"}
+            className={`rounded-full px-2 py-1 text-xs font-medium transition-colors ${
+              i18n.language === "fr" ? "bg-cedre text-cream" : "text-ink/60 hover:bg-white"
+            }`}
+          >
+            FR
+          </button>
+          <button
+            type="button"
+            onClick={() => i18n.changeLanguage("en")}
+            aria-pressed={i18n.language === "en"}
+            className={`rounded-full px-2 py-1 text-xs font-medium transition-colors ${
+              i18n.language === "en" ? "bg-cedre text-cream" : "text-ink/60 hover:bg-white"
+            }`}
+          >
+            EN
+          </button>
+        </div>
       </div>
 
       <div className="my-1 border-t border-ink/10" />
@@ -231,28 +265,28 @@ function MobileMenu({ isOpen, onClose }) {
           {user.role === "admin" && (
             <>
               <Link to="/admin/validation" onClick={onClose} className={MOBILE_MENU_ITEM_CLASSES}>
-                Validation
+                {t("nav.validation")}
               </Link>
               <Link to="/admin/dashboard" onClick={onClose} className={MOBILE_MENU_ITEM_CLASSES}>
-                Dashboard CRM
+                {t("nav.crmDashboard")}
               </Link>
             </>
           )}
           <Link to="/profil" onClick={onClose} className={MOBILE_MENU_ITEM_CLASSES}>
-            Mon profil
+            {t("nav.myProfile")}
           </Link>
           {user.role === "operateur" ? (
             <>
               <Link to="/operateur/dashboard" onClick={onClose} className={MOBILE_MENU_ITEM_CLASSES}>
-                Dashboard opérateur
+                {t("nav.operatorDashboard")}
               </Link>
               <Link to="/operateur/verification" onClick={onClose} className={MOBILE_MENU_ITEM_CLASSES}>
-                Vérification du compte
+                {t("nav.accountVerification")}
               </Link>
             </>
           ) : (
             <Link to="/mes-reservations" onClick={onClose} className={MOBILE_MENU_ITEM_CLASSES}>
-              Mes réservations
+              {t("nav.myReservations")}
             </Link>
           )}
           <button
@@ -260,12 +294,12 @@ function MobileMenu({ isOpen, onClose }) {
             onClick={handleLogout}
             className={`w-full text-left text-price ${MOBILE_MENU_ITEM_CLASSES}`}
           >
-            Se déconnecter
+            {t("nav.logout")}
           </button>
         </>
       ) : (
         <Link to="/login" onClick={onClose} className={MOBILE_MENU_ITEM_CLASSES}>
-          Se connecter
+          {t("nav.login")}
         </Link>
       )}
     </div>
@@ -273,6 +307,7 @@ function MobileMenu({ isOpen, onClose }) {
 }
 
 export default function Header() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [afficherRecherche, setAfficherRecherche] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -304,12 +339,12 @@ export default function Header() {
           <nav className="flex flex-1 shrink-0 items-center justify-end gap-3 text-ink md:flex-none md:gap-8">
             <Link to="/favoris" className={NAV_ITEM_CLASSES}>
               <Heart className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
-              <span className="hidden md:inline">Favoris</span>
+              <span className="hidden md:inline">{t("nav.favorites")}</span>
             </Link>
             {(!user || user?.role === "voyageur") && (
               <Link to="/mes-reservations" className={NAV_ITEM_CLASSES}>
                 <ShoppingCart className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
-                <span className="hidden md:inline">Réservations</span>
+                <span className="hidden md:inline">{t("nav.reservations")}</span>
               </Link>
             )}
 
@@ -320,7 +355,7 @@ export default function Header() {
               ) : (
                 <Link to="/login" className={NAV_ITEM_CLASSES}>
                   <User className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
-                  Se connecter
+                  {t("nav.login")}
                 </Link>
               )}
             </div>
@@ -330,7 +365,7 @@ export default function Header() {
               onClick={() => setMobileMenuOpen((open) => !open)}
               aria-haspopup="menu"
               aria-expanded={mobileMenuOpen}
-              aria-label="Menu"
+              aria-label={t("nav.menu")}
               className="flex items-center justify-center text-ink hover:text-price md:hidden"
             >
               <Menu className="h-6 w-6" strokeWidth={1.75} aria-hidden="true" />

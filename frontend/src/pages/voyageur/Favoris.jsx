@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Navigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import Header from "../../components/layout/Header"
 import ActiviteCard from "../../components/ui/ActiviteCard"
 import { useAuth } from "../../context/AuthContext"
@@ -19,6 +20,7 @@ function ActiviteCardSkeleton() {
 }
 
 export default function Favoris() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [favoris, setFavoris] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -72,12 +74,12 @@ export default function Favoris() {
 
       <section className="mx-auto max-w-3xl px-6 py-12">
         <h1 className="font-fraunces text-2xl font-semibold text-ink mb-6">
-          Mes favoris
+          {t("voyageur.favorites.title")}
         </h1>
 
         {error && (
           <p className="text-price">
-            Impossible de charger vos favoris pour le moment. Veuillez réessayer plus tard.
+            {t("voyageur.favorites.loadError")}
           </p>
         )}
 
@@ -90,7 +92,7 @@ export default function Favoris() {
         )}
 
         {!error && !isLoading && favoris.length === 0 && (
-          <p className="text-ink/70">Vous n&apos;avez pas encore de favoris.</p>
+          <p className="text-ink/70">{t("voyageur.favorites.empty")}</p>
         )}
 
         {!error && !isLoading && favoris.length > 0 && (

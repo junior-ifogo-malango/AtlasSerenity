@@ -1,10 +1,12 @@
 import { useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { Eye, EyeOff } from "lucide-react"
 import { useAuth } from "../../context/AuthContext"
 import apiFetch from "../../services/api"
 
 export default function Login() {
+  const { t } = useTranslation()
   const { login } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -33,13 +35,13 @@ export default function Login() {
       if (err.status === 403) {
         setNeedsVerification(true)
         setError(
-          err.data?.message || "Veuillez vérifier votre adresse email avant de vous connecter."
+          err.data?.message || t("auth.login.verifyEmailPrompt")
         )
       } else {
         setError(
           err.status === 401 || err.status === 422
-            ? "Email ou mot de passe incorrect."
-            : "Une erreur est survenue. Veuillez réessayer."
+            ? t("auth.login.invalidCredentials")
+            : t("common.genericError")
         )
       }
     } finally {
@@ -58,7 +60,7 @@ export default function Login() {
       })
       setResendSent(true)
     } catch {
-      setError("Impossible de renvoyer l'email pour le moment. Veuillez réessayer.")
+      setError(t("auth.login.resendFailedError"))
     } finally {
       setIsResending(false)
     }
@@ -68,7 +70,7 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-cream px-6">
       <div className="w-full max-w-md">
         <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink text-center mb-8">
-          Connexion
+          {t("auth.login.title")}
         </h1>
 
         <form
@@ -77,7 +79,7 @@ export default function Login() {
         >
           <div>
             <label htmlFor="email" className="block text-base font-medium text-ink mb-1">
-              Email
+              {t("common.email")}
             </label>
             <input
               id="email"
@@ -87,13 +89,13 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border border-ink/15 bg-white px-4 py-2 text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-cedre"
-              placeholder="vous@exemple.com"
+              placeholder={t("common.emailPlaceholder")}
             />
           </div>
 
           <div>
             <label htmlFor="password" className="block text-base font-medium text-ink mb-1">
-              Mot de passe
+              {t("common.password")}
             </label>
             <div className="relative">
               <input
@@ -109,7 +111,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setShowPassword((show) => !show)}
-                aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                aria-label={showPassword ? t("common.hidePassword") : t("common.showPassword")}
                 className="absolute inset-y-0 right-0 flex items-center px-3 text-ink/50 hover:text-ink"
               >
                 {showPassword ? (
@@ -123,7 +125,7 @@ export default function Login() {
               to="/mot-de-passe-oublie"
               className="mt-1 inline-block text-sm font-medium text-cedre hover:underline"
             >
-              Mot de passe oublié ?
+              {t("auth.login.forgotPassword")}
             </Link>
           </div>
 
@@ -135,7 +137,7 @@ export default function Login() {
               {needsVerification && (
                 resendSent ? (
                   <p className="text-base text-cedre">
-                    Email de vérification renvoyé, consultez votre boîte mail.
+                    {t("auth.login.verificationResent")}
                   </p>
                 ) : (
                   <button
@@ -144,7 +146,7 @@ export default function Login() {
                     disabled={isResending}
                     className="text-base font-medium text-cedre hover:underline disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {isResending ? "Envoi..." : "Renvoyer l'email de vérification"}
+                    {isResending ? t("auth.login.resending") : t("auth.login.resendVerification")}
                   </button>
                 )
               )}
@@ -156,13 +158,13 @@ export default function Login() {
             disabled={isSubmitting}
             className="w-full rounded-full bg-cedre px-8 py-3 text-base font-medium text-cream shadow-md transition-colors hover:bg-cedre/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSubmitting ? "Connexion..." : "Se connecter"}
+            {isSubmitting ? t("auth.login.submitting") : t("auth.login.submit")}
           </button>
 
           <p className="text-center text-base text-ink/70">
-            Pas encore de compte ?{" "}
+            {t("auth.login.noAccount")}{" "}
             <Link to={registerHref} className="font-medium text-cedre hover:underline">
-              Créer un compte
+              {t("auth.login.createAccount")}
             </Link>
           </p>
         </form>

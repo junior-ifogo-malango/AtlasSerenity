@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Navigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { Chart as ChartJS, registerables } from "chart.js"
 import { Line, Bar, Pie } from "react-chartjs-2"
 import { LayoutGrid, CheckSquare, Users, ListChecks } from "lucide-react"
@@ -8,17 +9,11 @@ import SidebarNav from "../../components/ui/SidebarNav"
 import StatCard from "../../components/ui/StatCard"
 import { useAuth } from "../../context/AuthContext"
 import apiFetch from "../../services/api"
+import { formatPrixMAD, getDateLocale } from "../../utils/format"
 
 ChartJS.register(...registerables)
 
 const PALETTE = ["#2d4a3e", "#b85c38", "#dda15e", "#8fae95", "#6b8f7a", "#8a5a44"]
-
-const SIDEBAR_ITEMS = [
-  { label: "Dashboard CRM", to: "/admin/dashboard", icon: LayoutGrid },
-  { label: "Validations", to: "/admin/validation", icon: CheckSquare },
-  { label: "Utilisateurs", icon: Users, disabled: true },
-  { label: "Activités", icon: ListChecks, disabled: true },
-]
 
 const CHART_FONT = { family: "Lato, ui-sans-serif, system-ui, sans-serif", size: 13 }
 
@@ -49,18 +44,10 @@ const PIE_CHART_OPTIONS = {
   },
 }
 
-function formatMois(mois) {
-  return new Intl.DateTimeFormat("fr-FR", { month: "short", year: "numeric" }).format(
+function formatMois(mois, lang) {
+  return new Intl.DateTimeFormat(getDateLocale(lang), { month: "short", year: "numeric" }).format(
     new Date(`${mois}-01T00:00:00`)
   )
-}
-
-function formatPrixMAD(prix) {
-  return new Intl.NumberFormat("fr-MA", {
-    style: "currency",
-    currency: "MAD",
-    maximumFractionDigits: 0,
-  }).format(prix ?? 0)
 }
 
 function ChartCard({ title, children }) {
@@ -73,7 +60,15 @@ function ChartCard({ title, children }) {
 }
 
 export default function DashboardCRM() {
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
+
+  const SIDEBAR_ITEMS = [
+    { label: t("nav.crmDashboard"), to: "/admin/dashboard", icon: LayoutGrid },
+    { label: t("admin.dashboard.sidebarValidations"), to: "/admin/validation", icon: CheckSquare },
+    { label: t("admin.dashboard.sidebarUsers"), icon: Users, disabled: true },
+    { label: t("admin.dashboard.sidebarActivities"), icon: ListChecks, disabled: true },
+  ]
   const [stats, setStats] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -118,17 +113,17 @@ export default function DashboardCRM() {
       <div className="min-h-screen bg-cream">
         <Header />
         <p className="mx-auto max-w-4xl px-6 py-12 text-ink/70">
-          Cette page est réservée aux administrateurs.
+          {t("admin.validation.adminOnly")}
         </p>
       </div>
     )
   }
 
   const reservationsData = stats && {
-    labels: stats.reservations_par_mois.map((item) => formatMois(item.mois)),
+    labels: stats.reservations_par_mois.map((item) => formatMois(item.mois, i18n.language)),
     datasets: [
       {
-        label: "Réservations",
+        label: t("admin.dashboard.reservationsDatasetLabel"),
         data: stats.reservations_par_mois.map((item) => Number(item.total)),
         borderColor: "#2d4a3e",
         backgroundColor: "#2d4a3e",
@@ -138,10 +133,10 @@ export default function DashboardCRM() {
   }
 
   const revenusData = stats && {
-    labels: stats.revenus_par_mois.map((item) => formatMois(item.mois)),
+    labels: stats.revenus_par_mois.map((item) => formatMois(item.mois, i18n.language)),
     datasets: [
       {
-        label: "Revenus (MAD)",
+        label: t("admin.dashboard.revenueDatasetLabel"),
         data: stats.revenus_par_mois.map((item) => Number(item.total)),
         backgroundColor: "#b85c38",
         borderRadius: 6,
@@ -165,7 +160,7 @@ export default function DashboardCRM() {
     labels: stats.activites_par_region.map((item) => item.region),
     datasets: [
       {
-        label: "Activités",
+        label: t("admin.dashboard.activitiesDatasetLabel"),
         data: stats.activites_par_region.map((item) => Number(item.total)),
         backgroundColor: "#2d4a3e",
         borderRadius: 6,
@@ -178,79 +173,79 @@ export default function DashboardCRM() {
       <Header />
 
       <div className="mx-auto flex max-w-[1440px] flex-col gap-6 px-4 py-6 md:flex-row md:gap-0 md:px-0 md:py-0">
-        <SidebarNav title="Administration" items={SIDEBAR_ITEMS} />
+        <SidebarNav title={t("admin.dashboard.sidebarTitle")} items={SIDEBAR_ITEMS} />
 
         <div className="min-w-0 flex-1 px-2 py-4 md:max-w-[1200px] md:px-10 md:py-10">
           <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink">
-            Tableau de bord
+            {t("admin.dashboard.title")}
           </h1>
           <p className="mt-1 text-base text-ink/60">
-            Vue d'ensemble des comptes à valider, de l'activité et de la performance de la plateforme.
+            {t("admin.dashboard.subtitle")}
           </p>
 
           {error && (
             <p className="mt-6 text-argile" role="alert">
-              Impossible de charger les statistiques. Veuillez réessayer plus tard.
+              {t("admin.dashboard.loadError")}
             </p>
           )}
 
-          {isLoading && !error && <p className="mt-6 text-ink/70">Chargement...</p>}
+          {isLoading && !error && <p className="mt-6 text-ink/70">{t("common.loading")}</p>}
 
           {!isLoading && !error && stats && (
             <div className="mt-8 space-y-8">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard
-                  label="Comptes en attente de validation"
+                  label={t("admin.dashboard.pendingAccounts")}
                   value={stats.comptes_en_attente}
-                  subtext={stats.comptes_en_attente > 0 ? "Action requise" : "Aucun compte en attente"}
+                  subtext={stats.comptes_en_attente > 0 ? t("admin.dashboard.actionRequired") : t("admin.dashboard.noPendingAccounts")}
                   subtextTone={stats.comptes_en_attente > 0 ? "argile" : "muted"}
                 />
                 <StatCard
-                  label="Note moyenne globale"
+                  label={t("admin.dashboard.globalAverageRating")}
                   value={stats.note_moyenne_globale !== null ? `${stats.note_moyenne_globale} / 5` : "—"}
-                  subtext={stats.note_moyenne_globale === null ? "Aucun avis pour le moment" : null}
+                  subtext={stats.note_moyenne_globale === null ? t("admin.dashboard.noReviewsYet") : null}
                   subtextTone="muted"
                 />
                 <StatCard
-                  label="Réservations ce mois"
+                  label={t("admin.dashboard.reservationsThisMonth")}
                   value={stats.reservations_ce_mois}
-                  subtext="Ce mois-ci"
+                  subtext={t("admin.dashboard.thisMonth")}
                   subtextTone="muted"
                 />
                 <StatCard
-                  label="Revenus ce mois"
-                  value={formatPrixMAD(stats.revenus_ce_mois)}
-                  subtext="Ce mois-ci"
+                  label={t("admin.dashboard.revenueThisMonth")}
+                  value={formatPrixMAD(stats.revenus_ce_mois, i18n.language)}
+                  subtext={t("admin.dashboard.thisMonth")}
                   subtextTone="muted"
                 />
               </div>
 
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <ChartCard title="Réservations par mois">
+                <ChartCard title={t("admin.dashboard.reservationsByMonth")}>
                   <Line data={reservationsData} options={CHART_OPTIONS} />
                 </ChartCard>
 
-                <ChartCard title="Revenus par mois (MAD)">
+                <ChartCard title={t("admin.dashboard.revenueByMonth")}>
                   <Bar data={revenusData} options={CHART_OPTIONS} />
                 </ChartCard>
               </div>
 
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <ChartCard title="Répartition par catégorie">
+                <ChartCard title={t("admin.dashboard.byCategoryBreakdown")}>
                   <Pie data={categoriesData} options={PIE_CHART_OPTIONS} />
                 </ChartCard>
 
-                <ChartCard title="Répartition par région">
+                <ChartCard title={t("admin.dashboard.byRegionBreakdown")}>
                   <Bar data={regionsData} options={HORIZONTAL_BAR_OPTIONS} />
                 </ChartCard>
               </div>
 
               <div className="rounded-2xl border border-ink/10 bg-white p-6 shadow-sm">
                 <h2 className="mb-4 font-fraunces text-lg font-semibold text-ink">
-                  Top activités (réservations)
+                  {t("admin.dashboard.topActivities")}
                 </h2>
                 {stats.top_activites.length === 0 ? (
-                  <p className="text-ink/70">Aucune donnée disponible.</p>
+                  <p className="text-ink/70">{t("admin.dashboard.noDataAvailable")}</p>
                 ) : (
                   <div className="divide-y divide-ink/5">
                     {stats.top_activites.map((activite, index) => (

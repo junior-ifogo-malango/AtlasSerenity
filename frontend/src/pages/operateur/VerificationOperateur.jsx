@@ -1,39 +1,30 @@
 import { useEffect, useRef, useState } from "react"
 import { Navigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import Header from "../../components/layout/Header"
 import { useAuth } from "../../context/AuthContext"
 import apiFetch from "../../services/api"
-
-const TYPES_REQUIS = {
-  guide: ["certificat_guide", "assurance"],
-  entreprise: ["registre_commerce", "assurance"],
-}
-
-const LABELS_DOCUMENT = {
-  certificat_guide: "Certificat de guide",
-  assurance: "Attestation d'assurance",
-  registre_commerce: "Registre de commerce",
-  autre: "Autre document",
-}
-
-const STATUTS_DOCUMENT = {
-  en_attente: { label: "En attente de vérification", className: "border border-ocre/30 bg-ocre/15 text-ink" },
-  valide: { label: "Validé", className: "bg-cedre/10 text-cedre" },
-  refuse: { label: "Refusé", className: "bg-argile/10 text-argile" },
-}
-
-const STATUTS_COMPTE = {
-  en_attente: { label: "Compte en attente de validation", className: "border border-ocre/30 bg-ocre/15 text-ink" },
-  valide: { label: "Compte validé", className: "bg-cedre/10 text-cedre" },
-  refuse: { label: "Compte refusé", className: "bg-argile/10 text-argile" },
-}
+import {
+  TYPES_REQUIS,
+  LABELS_DOCUMENT,
+  STATUT_DOCUMENT_CLASSNAMES,
+  STATUTS_DOCUMENT_LABEL_KEYS_OPERATEUR,
+  STATUT_COMPTE_CLASSNAMES,
+  STATUTS_COMPTE_LABEL_KEYS,
+} from "../../constants/operateur"
 
 function DocumentSlot({ type, document, onUpload }) {
+  const { t } = useTranslation()
   const fileInputRef = useRef(null)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState(null)
 
-  const statutInfo = document ? STATUTS_DOCUMENT[document.statut] : null
+  const statutInfo = document
+    ? {
+        label: t(STATUTS_DOCUMENT_LABEL_KEYS_OPERATEUR[document.statut]),
+        className: STATUT_DOCUMENT_CLASSNAMES[document.statut],
+      }
+    : null
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -53,7 +44,7 @@ function DocumentSlot({ type, document, onUpload }) {
     } catch (err) {
       setError(
         err.data?.errors?.document?.[0] ??
-          "Une erreur est survenue lors de l'envoi du document. Veuillez réessayer."
+          t("operateur.verification.uploadError")
       )
     } finally {
       setIsUploading(false)
@@ -63,17 +54,17 @@ function DocumentSlot({ type, document, onUpload }) {
   return (
     <div className="rounded-2xl border-2 border-cedre bg-white p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-fraunces text-lg font-semibold text-ink">{LABELS_DOCUMENT[type]}</h3>
+        <h3 className="font-fraunces text-lg font-semibold text-ink">{t(LABELS_DOCUMENT[type])}</h3>
         <span
           className={`rounded-full px-3 py-1 text-sm font-medium ${statutInfo?.className ?? "bg-ink/10 text-ink/60"}`}
         >
-          {statutInfo?.label ?? "Non envoyé"}
+          {statutInfo?.label ?? t("operateur.documentStatus.notSent")}
         </span>
       </div>
 
       {document?.statut === "refuse" && document.commentaire_admin && (
         <p className="mt-3 rounded-lg border border-argile/20 bg-argile/5 p-3 text-base text-ink">
-          <span className="font-medium">Motif du refus : </span>
+          <span className="font-medium">{t("operateur.verification.rejectReasonLabel")}</span>
           {document.commentaire_admin}
         </p>
       )}
@@ -97,7 +88,11 @@ function DocumentSlot({ type, document, onUpload }) {
           disabled={isUploading}
           className="rounded-full border border-cedre px-6 py-2 text-base font-medium text-cedre transition-colors hover:bg-cedre hover:text-cream disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isUploading ? "Envoi..." : document ? "Renvoyer un document" : "Envoyer le document"}
+          {isUploading
+            ? t("operateur.verification.sending")
+            : document
+              ? t("operateur.verification.resendDocument")
+              : t("operateur.verification.sendDocument")}
         </button>
       </form>
     </div>
@@ -105,6 +100,7 @@ function DocumentSlot({ type, document, onUpload }) {
 }
 
 export default function VerificationOperateur() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [documents, setDocuments] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -150,17 +146,22 @@ export default function VerificationOperateur() {
       <div className="min-h-screen bg-cream">
         <Header />
         <p className="mx-auto max-w-4xl px-6 py-12 text-ink/70">
-          Cette page est réservée aux opérateurs.
+          {t("operateur.verification.operatorOnly")}
         </p>
       </div>
     )
   }
 
   const typesRequis = TYPES_REQUIS[user.type_operateur] ?? []
-  const statutCompteInfo = STATUTS_COMPTE[user.statut_compte] ?? {
-    label: user.statut_compte,
-    className: "bg-ink/10 text-ink",
-  }
+  const statutCompteInfo = STATUTS_COMPTE_LABEL_KEYS[user.statut_compte]
+    ? {
+        label: t(STATUTS_COMPTE_LABEL_KEYS[user.statut_compte]),
+        className: STATUT_COMPTE_CLASSNAMES[user.statut_compte],
+      }
+    : {
+        label: user.statut_compte,
+        className: "bg-ink/10 text-ink",
+      }
 
   async function handleUpload(formData) {
     const document = await apiFetch("/documents-operateur", {
@@ -180,7 +181,7 @@ export default function VerificationOperateur() {
       <div className="mx-auto max-w-3xl px-6 py-12">
         <div className="mb-8 flex flex-wrap items-center gap-3">
           <h1 className="font-fraunces text-3xl font-semibold leading-snug text-ink">
-            Vérification du compte
+            {t("nav.accountVerification")}
           </h1>
           <span className={`rounded-full px-3 py-1 text-sm font-medium ${statutCompteInfo.className}`}>
             {statutCompteInfo.label}
@@ -188,17 +189,16 @@ export default function VerificationOperateur() {
         </div>
 
         <p className="mb-8 text-base text-ink/70">
-          Envoyez les documents requis pour activer votre compte opérateur. Chaque document est
-          examiné par un administrateur avant validation.
+          {t("operateur.verification.intro")}
         </p>
 
         {error && (
           <p className="mb-6 text-argile" role="alert">
-            Impossible de charger vos documents. Veuillez réessayer plus tard.
+            {t("operateur.verification.loadError")}
           </p>
         )}
 
-        {isLoading && !error && <p className="text-ink/70">Chargement...</p>}
+        {isLoading && !error && <p className="text-ink/70">{t("operateur.verification.loading")}</p>}
 
         {!isLoading && !error && (
           <div className="space-y-4">

@@ -1,28 +1,38 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import apiFetch from '../../services/api'
 
-const OPTIONS_HEURE = [
-  { valeur: 'matin', label: 'Matin (avant 12h)' },
-  { valeur: 'apres_midi', label: 'Après-midi (12h-17h)' },
-  { valeur: 'soiree', label: 'Soirée (après 17h)' },
-]
+function useOptionsHeure() {
+  const { t } = useTranslation()
+  return [
+    { valeur: 'matin', label: t('filters.morning') },
+    { valeur: 'apres_midi', label: t('filters.afternoon') },
+    { valeur: 'soiree', label: t('filters.evening') },
+  ]
+}
 
-const OPTIONS_DUREE_UNITE = [
-  { valeur: '', label: 'Peu importe' },
-  { valeur: 'minutes', label: 'Minutes' },
-  { valeur: 'heures', label: 'Heures' },
-  { valeur: 'jours', label: 'Jours' },
-]
+function useOptionsDureeUnite() {
+  const { t } = useTranslation()
+  return [
+    { valeur: '', label: t('filters.any') },
+    { valeur: 'minutes', label: t('filters.minutes') },
+    { valeur: 'heures', label: t('filters.hours') },
+    { valeur: 'jours', label: t('filters.days') },
+  ]
+}
 
-const OPTIONS_NOTE_MIN = [
-  { valeur: '', label: 'Toutes notes' },
-  { valeur: '3.0', label: '3.0+' },
-  { valeur: '3.5', label: '3.5+' },
-  { valeur: '4.0', label: '4.0+' },
-]
+function useOptionsNoteMin() {
+  const { t } = useTranslation()
+  return [
+    { valeur: '', label: t('filters.allRatings') },
+    { valeur: '3.0', label: '3.0+' },
+    { valeur: '3.5', label: '3.5+' },
+    { valeur: '4.0', label: '4.0+' },
+  ]
+}
 
 const VILLES_VISIBLES_PAR_DEFAUT = 6
 
@@ -45,6 +55,10 @@ function toggleValeur(liste, valeur) {
 }
 
 export default function FiltresModal({ isOpen, onClose, categories }) {
+  const { t } = useTranslation()
+  const OPTIONS_HEURE = useOptionsHeure()
+  const OPTIONS_DUREE_UNITE = useOptionsDureeUnite()
+  const OPTIONS_NOTE_MIN = useOptionsNoteMin()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -150,11 +164,11 @@ export default function FiltresModal({ isOpen, onClose, categories }) {
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-ink/10 px-6 py-4">
-          <h2 className="font-fraunces text-xl font-semibold text-ink">Filtres avancés</h2>
+          <h2 className="font-fraunces text-xl font-semibold text-ink">{t('filters.title')}</h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t('filters.close')}
             className="rounded-full p-1 text-ink/60 hover:bg-cream hover:text-ink"
           >
             <X className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
@@ -164,7 +178,7 @@ export default function FiltresModal({ isOpen, onClose, categories }) {
         <form onSubmit={handleAppliquer} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-4">
             <fieldset>
-              <legend className="mb-2 text-base font-semibold text-ink">Heure de début</legend>
+              <legend className="mb-2 text-base font-semibold text-ink">{t('filters.startTime')}</legend>
               <div className="flex flex-col gap-2">
                 {OPTIONS_HEURE.map((option) => (
                   <label key={option.valeur} className="flex items-center gap-2 text-base text-ink">
@@ -183,7 +197,7 @@ export default function FiltresModal({ isOpen, onClose, categories }) {
             </fieldset>
 
             <fieldset>
-              <legend className="mb-2 text-base font-semibold text-ink">Durée</legend>
+              <legend className="mb-2 text-base font-semibold text-ink">{t('filters.duration')}</legend>
               <div className="mb-3 flex flex-wrap gap-3">
                 {OPTIONS_DUREE_UNITE.map((option) => (
                   <label
@@ -203,7 +217,7 @@ export default function FiltresModal({ isOpen, onClose, categories }) {
               </div>
               <div className="flex items-center gap-3">
                 <label className="flex min-w-0 flex-1 flex-col gap-1 text-base text-ink/70">
-                  Valeur min
+                  {t('filters.minValue')}
                   <input
                     type="number"
                     min="0"
@@ -213,7 +227,7 @@ export default function FiltresModal({ isOpen, onClose, categories }) {
                   />
                 </label>
                 <label className="flex min-w-0 flex-1 flex-col gap-1 text-base text-ink/70">
-                  Valeur max
+                  {t('filters.maxValue')}
                   <input
                     type="number"
                     min="0"
@@ -226,10 +240,10 @@ export default function FiltresModal({ isOpen, onClose, categories }) {
             </fieldset>
 
             <fieldset>
-              <legend className="mb-2 text-base font-semibold text-ink">Prix (MAD)</legend>
+              <legend className="mb-2 text-base font-semibold text-ink">{t('filters.price')}</legend>
               <div className="flex items-center gap-3">
                 <label className="flex min-w-0 flex-1 flex-col gap-1 text-base text-ink/70">
-                  Prix min
+                  {t('filters.minPrice')}
                   <input
                     type="number"
                     min="0"
@@ -239,7 +253,7 @@ export default function FiltresModal({ isOpen, onClose, categories }) {
                   />
                 </label>
                 <label className="flex min-w-0 flex-1 flex-col gap-1 text-base text-ink/70">
-                  Prix max
+                  {t('filters.maxPrice')}
                   <input
                     type="number"
                     min="0"
@@ -252,7 +266,7 @@ export default function FiltresModal({ isOpen, onClose, categories }) {
             </fieldset>
 
             <fieldset>
-              <legend className="mb-2 text-base font-semibold text-ink">Catégories</legend>
+              <legend className="mb-2 text-base font-semibold text-ink">{t('filters.categories')}</legend>
               <div className="flex flex-col gap-2">
                 {categories.map((categorie) => (
                   <label key={categorie.id} className="flex items-center gap-2 text-base text-ink">
@@ -273,7 +287,7 @@ export default function FiltresModal({ isOpen, onClose, categories }) {
             </fieldset>
 
             <fieldset>
-              <legend className="mb-2 text-base font-semibold text-ink">Villes</legend>
+              <legend className="mb-2 text-base font-semibold text-ink">{t('filters.cities')}</legend>
               <div className="flex flex-col gap-2">
                 {villesAffichees.map((ville) => (
                   <label key={ville.id} className="flex items-center gap-2 text-base text-ink">
@@ -297,13 +311,13 @@ export default function FiltresModal({ isOpen, onClose, categories }) {
                   onClick={() => setAfficherToutesVilles((current) => !current)}
                   className="mt-2 text-sm font-medium text-cedre hover:underline"
                 >
-                  {afficherToutesVilles ? 'Afficher moins' : 'Afficher plus'}
+                  {afficherToutesVilles ? t('filters.showLess') : t('filters.showMore')}
                 </button>
               )}
             </fieldset>
 
             <fieldset>
-              <legend className="mb-2 text-base font-semibold text-ink">Note minimum</legend>
+              <legend className="mb-2 text-base font-semibold text-ink">{t('filters.minRating')}</legend>
               <div className="flex flex-wrap gap-3">
                 {OPTIONS_NOTE_MIN.map((option) => (
                   <label
@@ -330,13 +344,13 @@ export default function FiltresModal({ isOpen, onClose, categories }) {
               onClick={handleReinitialiser}
               className="rounded-full px-4 py-2 text-base font-medium text-ink/70 transition-colors hover:bg-cream"
             >
-              Réinitialiser
+              {t('filters.reset')}
             </button>
             <button
               type="submit"
               className="rounded-full bg-cedre px-6 py-2 text-base font-medium text-cream shadow-sm transition-colors hover:bg-cedre/90"
             >
-              Appliquer
+              {t('filters.apply')}
             </button>
           </div>
         </form>

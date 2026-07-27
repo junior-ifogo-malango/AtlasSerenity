@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import RechercheBar from './RechercheBar'
 import hero1 from '../../assets/hero/hero-1.jpg'
 import hero2 from '../../assets/hero/hero-2.jpg'
@@ -11,6 +12,7 @@ const SLIDES = [hero1, hero2, hero3, hero4, hero5, hero6]
 const INTERVAL_MS = 5000
 
 export default function HeroCarousel() {
+  const { t } = useTranslation()
   const [activeIndex, setActiveIndex] = useState(0)
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function HeroCarousel() {
 
       <div className="relative z-10 mx-auto max-w-4xl px-6 pt-24 pb-8 text-center sm:pt-32 sm:pb-10">
         <h1 className="font-fraunces text-4xl font-semibold leading-tight text-cream drop-shadow-sm sm:text-5xl">
-          L&apos;écotourisme authentique, au cœur de l&apos;Atlas
+          {t('hero.tagline')}
         </h1>
       </div>
 
